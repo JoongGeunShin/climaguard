@@ -49,6 +49,12 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- 위치 권한 (geolocator) -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>주변 기상 정보와 무더위·한파쉼터를 찾기 위해 현재 위치가 필요합니다.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>선제 폭염·한파 알림을 위해 백그라운드 위치 접근이 필요합니다.</string>
+
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
