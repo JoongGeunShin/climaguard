@@ -13,6 +13,12 @@ class AppColors {
   static const Color riskDanger = Color(0xFFD50000);   // 위험 — 빨강
   static const Color riskSafe = Color(0xFF43A047);     // 안전 — 초록
 
+  // 한파 위험단계 색상
+  static const Color coldSafe    = Color(0xFF00897B); // 청록
+  static const Color coldCaution = Color(0xFF0288D1); // 하늘파랑
+  static const Color coldWarning = Color(0xFF1565C0); // 파랑
+  static const Color coldDanger  = Color(0xFF0D47A1); // 진남색
+
   static const Color background = Color(0xFFF5F5F5);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color onSurface = Color(0xFF1A1A1A);
