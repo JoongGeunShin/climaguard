@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "919556640418",
+    "project_id": "climaguard-6ea70",
+    "storage_bucket": "climaguard-6ea70.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:919556640418:android:371b0bff31ab17c804d1fb",
+        "android_client_info": {
+          "package_name": "com.example.climaguard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBffkHA8xTC1fqCFhnaXDjrVGB6Z7luuC4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
