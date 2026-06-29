@@ -11,6 +11,7 @@ import '../../providers/climate_alert_provider.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/user_profile_provider.dart';
 import '../../providers/weather_provider.dart';
+import 'widgets/debug_season_bar.dart';
 import 'widgets/error_body.dart';
 import 'widgets/home_header.dart';
 import 'widgets/hourly_chart_card.dart';
@@ -101,34 +102,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         return Scaffold(
           backgroundColor: bg,
           body: SafeArea(
-            child: RefreshIndicator(
-              onRefresh: _refresh,
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: HomeHeader(
-                      name: profile?.name ?? '',
-                      location: district?.display,
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: alert != null
-                        ? MainRiskCard(weather: weather, alert: alert)
-                        : NoProfileRiskCard(
-                            season: season,
-                            onSetupProfile: () => context.go('/profile'),
+            child: Column(
+              children: [
+                const DebugSeasonBar(),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _refresh,
+                    child: CustomScrollView(
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: HomeHeader(
+                            name: profile?.name ?? '',
+                            location: district?.display,
                           ),
-                  ),
-                  if (alert != null)
-                    SliverToBoxAdapter(
-                      child: InfoReasonRow(alert: alert),
+                        ),
+                        SliverToBoxAdapter(
+                          child: alert != null
+                              ? MainRiskCard(weather: weather, alert: alert)
+                              : NoProfileRiskCard(
+                                  season: season,
+                                  onSetupProfile: () => context.go('/profile'),
+                                ),
+                        ),
+                        if (alert != null)
+                          SliverToBoxAdapter(
+                            child: InfoReasonRow(alert: alert),
+                          ),
+                        SliverToBoxAdapter(
+                          child: HourlyChartCard(weather: weather),
+                        ),
+                        const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                      ],
                     ),
-                  SliverToBoxAdapter(
-                    child: HourlyChartCard(weather: weather),
                   ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
