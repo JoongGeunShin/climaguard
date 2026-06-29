@@ -6,7 +6,7 @@ import '../../presentation/providers/auth_provider.dart';
 import '../../presentation/providers/user_profile_provider.dart';
 import '../../presentation/screens/auth/login_screen.dart';
 import '../../presentation/screens/auth/otp_screen.dart';
-import '../../presentation/screens/auth/terms_screen.dart';
+
 import '../../presentation/screens/home/home_screen.dart';
 import '../../presentation/screens/onboarding/onboarding_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
@@ -46,10 +46,9 @@ GoRouter appRouter(AppRouterRef ref) {
 
       final hasProfile = profileAsync.valueOrNull != null;
       if (!hasProfile) {
-        return (loc == '/onboarding' || loc == '/terms') ? null : '/onboarding';
+        return loc == '/onboarding' ? null : '/onboarding';
       }
-      if (loc == '/login' || loc == '/otp' || loc == '/onboarding' ||
-          loc == '/terms' || loc == '/splash') {
+      if (loc == '/login' || loc == '/otp' || loc == '/onboarding' || loc == '/splash') {
         return '/';
       }
       return null;
@@ -72,10 +71,6 @@ GoRouter appRouter(AppRouterRef ref) {
             verificationId: extra['verificationId'] as String,
           );
         },
-      ),
-      GoRoute(
-        path: '/terms',
-        builder: (_, __) => const TermsScreen(),
       ),
       GoRoute(
         path: '/onboarding',
