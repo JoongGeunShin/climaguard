@@ -1,0 +1,13 @@
+enum RiskLevel {
+  safe,
+  caution,
+  warning,
+  danger;
+
+  String get label => switch (this) {
+        RiskLevel.safe => '안전',
+        RiskLevel.caution => '주의',
+        RiskLevel.warning => '경고',
+        RiskLevel.danger => '위험',
+      };
+}
