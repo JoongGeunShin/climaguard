@@ -15,6 +15,11 @@ class AppConstants {
       'https://www.safetydata.go.kr';
   static const String shelterEndpoint = '/V2/api/DSSP-IF-10941';
 
+  // 카카오 API
+  static const String kakaoBaseUrl =
+    'https://dapi.kakao.com/v2/local/geo';
+  static const String kakaoReverseGeocoderEndpoint = '/coord2regioncode.json';
+
   // 앱 설정
   static const int apiPageSize = 100;
   static const Duration apiTimeout = Duration(seconds: 10);
