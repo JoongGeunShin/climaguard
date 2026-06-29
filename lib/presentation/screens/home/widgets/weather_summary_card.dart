@@ -8,7 +8,18 @@ class WeatherSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isHeat = weather.season.isHeat;
+    final season = weather.season;
+    final feelsLabel = season.isHeat
+        ? '폭염 체감'
+        : season.isCold
+            ? '한파 체감'
+            : '체감온도';
+    final feelsIcon = season.isHeat
+        ? Icons.wb_sunny_outlined
+        : season.isCold
+            ? Icons.ac_unit
+            : Icons.thermostat_outlined;
+
     return Card(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Padding(
@@ -22,16 +33,16 @@ class WeatherSummaryCard extends StatelessWidget {
               icon: Icons.thermostat,
             ),
             _Item(
-              label: isHeat ? '폭염 체감' : '한파 체감',
+              label: feelsLabel,
               value: '${weather.feelsLike.toStringAsFixed(1)}°C',
-              icon: isHeat ? Icons.wb_sunny_outlined : Icons.ac_unit,
+              icon: feelsIcon,
             ),
             _Item(
               label: '습도',
               value: '${weather.humidity}%',
               icon: Icons.water_drop_outlined,
             ),
-            if (!isHeat)
+            if (season.isCold)
               _Item(
                 label: '풍속',
                 value: '${weather.windSpeed.toStringAsFixed(1)}m/s',

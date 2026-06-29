@@ -29,7 +29,7 @@ class ShelterRemoteDataSource {
     required Season season,
     int numOfRows = 50,
   }) async {
-    final typeCode = season.isHeat ? '1' : '2';
+    final typeCode = season.isHeat ? '1' : season.isCold ? '2' : '1';
 
     try {
       final response = await _dio.get<Map<String, dynamic>>(

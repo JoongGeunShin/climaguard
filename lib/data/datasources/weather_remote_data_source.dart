@@ -29,7 +29,6 @@ class WeatherRemoteDataSource {
     required int ny,
   }) async {
     final now = DateTime.now();
-    final season = Season.fromMonth(now.month);
     final (:date, :time) = _resolveBaseDateTime(now);
 
     try {
@@ -48,7 +47,7 @@ class WeatherRemoteDataSource {
       );
 
       final parsed = WeatherForecastResponse.fromJson(response.data!);
-      return _toWeatherData(parsed.response.body.items.items, now, season);
+      return _toWeatherData(parsed.response.body.items.items, now);
     } on DioException catch (e) {
       final status = e.response?.statusCode;
       if (status == 429) {
@@ -68,7 +67,6 @@ class WeatherRemoteDataSource {
   WeatherData _toWeatherData(
     List<WeatherForecastItem> items,
     DateTime at,
-    Season season,
   ) {
     double temperature = 0;
     int humidity = 0;
@@ -85,13 +83,20 @@ class WeatherRemoteDataSource {
       }
     }
 
-    final feelsLike = season.isHeat
-        ? _heatFeelsLike(temperature, humidity)
-        : _coldFeelsLike(temperature, windSpeed);
+    // 기온으로 시즌 결정: >24°C 더위, <14°C 추위, 그 외 적정
+    final season = Season.fromTemperature(temperature);
 
-    final officialRisk = season.isHeat
-        ? _heatOfficialRisk(feelsLike)
-        : _coldOfficialRisk(feelsLike);
+    final feelsLike = switch (season) {
+      Season.heat   => _heatFeelsLike(temperature, humidity),
+      Season.cold   => _coldFeelsLike(temperature, windSpeed),
+      Season.normal => temperature,
+    };
+
+    final officialRisk = switch (season) {
+      Season.heat   => _heatOfficialRisk(feelsLike),
+      Season.cold   => _coldOfficialRisk(feelsLike),
+      Season.normal => RiskLevel.safe,
+    };
 
     return WeatherData(
       temperature: temperature,

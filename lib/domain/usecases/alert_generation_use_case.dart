@@ -19,10 +19,11 @@ class AlertGenerationUseCase {
       );
     }
 
-    if (alert.personalRiskLevel.index >= RiskLevel.warning.index &&
+    if (!alert.season.isNormal &&
+        alert.personalRiskLevel.index >= RiskLevel.warning.index &&
         nearbyShelters.isNotEmpty) {
       final nearest = nearbyShelters.first;
-      final shelterType = alert.season == Season.heat ? '무더위쉼터' : '한파쉼터';
+      final shelterType = alert.season.isHeat ? '무더위쉼터' : '한파쉼터';
       buffer.writeln(
         '가까운 $shelterType: ${nearest.name} (${nearest.distanceKm.toStringAsFixed(1)}km)',
       );
@@ -31,11 +32,11 @@ class AlertGenerationUseCase {
     return buffer.toString().trim();
   }
 
-  String _riskMessage(ClimateAlert alert) {
-    return alert.season.isHeat
-        ? _heatMessage(alert.personalRiskLevel)
-        : _coldMessage(alert.personalRiskLevel);
-  }
+  String _riskMessage(ClimateAlert alert) => switch (alert.season) {
+        Season.heat   => _heatMessage(alert.personalRiskLevel),
+        Season.cold   => _coldMessage(alert.personalRiskLevel),
+        Season.normal => _normalMessage(alert.personalRiskLevel),
+      };
 
   String _heatMessage(RiskLevel level) => switch (level) {
         RiskLevel.safe    => '현재 폭염 위험이 낮습니다. 수분 보충을 꾸준히 해주세요.',
@@ -49,5 +50,12 @@ class AlertGenerationUseCase {
         RiskLevel.caution => '한파 주의 단계입니다. 노출 부위를 보온하고 외출 시간을 줄이세요.',
         RiskLevel.warning => '한파 경고 단계입니다. 가급적 실내에 머무르고 난방을 유지하세요.',
         RiskLevel.danger  => '한파 위험 단계입니다. 외출을 삼가고 한파쉼터를 이용하세요. 고령자·독거인은 즉시 확인하세요.',
+      };
+
+  String _normalMessage(RiskLevel level) => switch (level) {
+        RiskLevel.safe    => '현재 기온이 쾌적합니다. 야외 활동하기 좋은 날씨예요.',
+        RiskLevel.caution => '체감온도가 경계 범위에 있습니다. 수분 보충과 보온에 유의하세요.',
+        RiskLevel.warning => '날씨 변화에 주의하세요.',
+        RiskLevel.danger  => '날씨 상태를 주의하세요.',
       };
 }

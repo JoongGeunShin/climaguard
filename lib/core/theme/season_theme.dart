@@ -14,7 +14,8 @@ class SeasonTheme {
         RiskLevel.warning => AppColors.riskWarning,
         RiskLevel.danger  => AppColors.riskDanger,
       };
-    } else {
+    }
+    if (season.isCold) {
       return switch (level) {
         RiskLevel.safe    => AppColors.coldSafe,
         RiskLevel.caution => AppColors.coldCaution,
@@ -22,15 +23,23 @@ class SeasonTheme {
         RiskLevel.danger  => AppColors.coldDanger,
       };
     }
+    // normal
+    return switch (level) {
+      RiskLevel.safe    => AppColors.riskSafe,
+      RiskLevel.caution => const Color(0xFF66BB6A),
+      RiskLevel.warning => const Color(0xFF388E3C),
+      RiskLevel.danger  => const Color(0xFF1B5E20),
+    };
   }
 
-  /// 배경색 위에 올라갈 텍스트/아이콘 색상
   static Color onRiskColor(RiskLevel level, Season season) {
-    // 폭염 주의(노랑)만 어두운 배경이 아니므로 검정
     if (season.isHeat && level == RiskLevel.caution) return Colors.black87;
     return Colors.white;
   }
 
-  static IconData seasonIcon(Season season) =>
-      season.isHeat ? Icons.wb_sunny : Icons.ac_unit;
+  static IconData seasonIcon(Season season) => switch (season) {
+        Season.heat   => Icons.wb_sunny,
+        Season.cold   => Icons.ac_unit,
+        Season.normal => Icons.thermostat,
+      };
 }

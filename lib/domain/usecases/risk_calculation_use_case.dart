@@ -10,6 +10,20 @@ class RiskCalculationUseCase {
     required WeatherData weather,
   }) {
     final season = weather.season;
+
+    // 적정온도 구간(14~24°C): 더위·추위 위험 없음
+    if (season.isNormal) {
+      return ClimateAlert(
+        season: season,
+        personalRiskLevel: RiskLevel.safe,
+        officialRiskLevel: RiskLevel.safe,
+        personalThreshold: weather.temperature,
+        currentFeelsLike: weather.feelsLike,
+        adjustmentReasons: ['현재 기온이 쾌적한 범위(14~24°C)입니다.'],
+        generatedAt: DateTime.now(),
+      );
+    }
+
     final reasons = <String>[];
 
     final ageKey = _ageKey(profile.age);
