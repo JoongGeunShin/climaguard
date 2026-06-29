@@ -19,6 +19,19 @@ class AppColors {
   static const Color coldWarning = Color(0xFF1565C0); // 파랑
   static const Color coldDanger  = Color(0xFF0D47A1); // 진남색
 
+  // 시즌별 배경
+  static const Color heatBackground   = Color(0xFFFAEFEA);
+  static const Color coldBackground   = Color(0xFFEBF0FA);
+  static const Color normalBackground = Color(0xFFECF5EC); // 연한 초록
+
+  // 시즌별 메인 카드
+  static const Color heatCard   = Color(0xFFE53920);
+  static const Color coldCard   = Color(0xFF2C4FA0);
+  static const Color normalCard = Color(0xFF2E7D32); // 초록
+
+  // 개인화 비교 카드 (어두운 쪽)
+  static const Color comparePersonalBg = Color(0xFF1A2035);
+
   static const Color background = Color(0xFFF5F5F5);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color onSurface = Color(0xFF1A1A1A);
