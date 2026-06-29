@@ -15,10 +15,8 @@ class AppConstants {
       'https://www.safetydata.go.kr';
   static const String shelterEndpoint = '/V2/api/DSSP-IF-10941';
 
-  // 카카오 API
-  static const String kakaoBaseUrl =
-    'https://dapi.kakao.com/v2/local/geo';
-  static const String kakaoReverseGeocoderEndpoint = '/coord2regioncode.json';
+  // OpenStreetMap Nominatim (역지오코딩, 무료·키 불필요)
+  static const String nominatimBaseUrl = 'https://nominatim.openstreetmap.org';
 
   // 앱 설정
   static const int apiPageSize = 100;
