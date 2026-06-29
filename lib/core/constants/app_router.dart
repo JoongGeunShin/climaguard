@@ -6,6 +6,7 @@ import '../../presentation/providers/auth_provider.dart';
 import '../../presentation/providers/user_profile_provider.dart';
 import '../../presentation/screens/auth/login_screen.dart';
 import '../../presentation/screens/auth/otp_screen.dart';
+import '../../presentation/screens/auth/terms_screen.dart';
 import '../../presentation/screens/home/home_screen.dart';
 import '../../presentation/screens/onboarding/onboarding_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
@@ -34,9 +35,9 @@ GoRouter appRouter(AppRouterRef ref) {
         return (loc == '/login' || loc == '/otp') ? null : '/login';
       }
       if (!hasProfile) {
-        return loc == '/onboarding' ? null : '/onboarding';
+        return (loc == '/onboarding' || loc == '/terms') ? null : '/onboarding';
       }
-      if (loc == '/login' || loc == '/otp' || loc == '/onboarding') {
+      if (loc == '/login' || loc == '/otp' || loc == '/onboarding' || loc == '/terms') {
         return '/';
       }
       return null;
@@ -53,8 +54,13 @@ GoRouter appRouter(AppRouterRef ref) {
           return OtpScreen(
             phoneNumber: extra['phoneNumber']!,
             verificationId: extra['verificationId']!,
+            intent: extra['intent'] ?? 'login',
           );
         },
+      ),
+      GoRoute(
+        path: '/terms',
+        builder: (_, __) => const TermsScreen(),
       ),
       GoRoute(
         path: '/onboarding',
