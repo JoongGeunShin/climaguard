@@ -11,6 +11,7 @@ import '../../presentation/screens/home/home_screen.dart';
 import '../../presentation/screens/onboarding/onboarding_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
 import '../../presentation/screens/shelter/shelter_screen.dart';
+import '../../presentation/screens/splash_screen.dart';
 
 part 'app_router.g.dart';
 
@@ -20,29 +21,44 @@ GoRouter appRouter(AppRouterRef ref) {
   ref.onDispose(notifier.dispose);
 
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/splash',
     refreshListenable: notifier,
     redirect: (context, state) {
       final authAsync = ref.read(authStateProvider);
-      if (authAsync.isLoading) return null;
+      final loc = state.matchedLocation;
+
+      // auth 또는 profile 로딩 중 → 스플래시 유지
+      if (authAsync.isLoading) {
+        return loc == '/splash' ? null : '/splash';
+      }
 
       final isLoggedIn = authAsync.valueOrNull != null;
-      final hasProfile =
-          ref.read(userProfileNotifierProvider).valueOrNull != null;
-      final loc = state.matchedLocation;
+      final profileAsync = ref.read(userProfileNotifierProvider);
 
       if (!isLoggedIn) {
         return (loc == '/login' || loc == '/otp') ? null : '/login';
       }
+
+      // 로그인됐지만 프로필 아직 로딩 중 → 스플래시 유지
+      if (profileAsync.isLoading) {
+        return loc == '/splash' ? null : '/splash';
+      }
+
+      final hasProfile = profileAsync.valueOrNull != null;
       if (!hasProfile) {
         return (loc == '/onboarding' || loc == '/terms') ? null : '/onboarding';
       }
-      if (loc == '/login' || loc == '/otp' || loc == '/onboarding' || loc == '/terms') {
+      if (loc == '/login' || loc == '/otp' || loc == '/onboarding' ||
+          loc == '/terms' || loc == '/splash') {
         return '/';
       }
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (_, __) => const SplashScreen(),
+      ),
       GoRoute(
         path: '/login',
         builder: (_, __) => const LoginScreen(),
@@ -50,11 +66,10 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: '/otp',
         builder: (_, state) {
-          final extra = state.extra as Map<String, String>;
+          final extra = state.extra as Map<String, dynamic>;
           return OtpScreen(
-            phoneNumber: extra['phoneNumber']!,
-            verificationId: extra['verificationId']!,
-            intent: extra['intent'] ?? 'login',
+            phoneNumber: extra['phoneNumber'] as String,
+            verificationId: extra['verificationId'] as String,
           );
         },
       ),
