@@ -92,8 +92,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       if (!mounted) return;
 
       if (isNewUser) {
-        // 신규 사용자 → 약관 동의 / 온보딩
-        context.go('/terms');
+        context.go('/onboarding');
         return;
       }
 
