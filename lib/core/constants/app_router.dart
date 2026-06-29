@@ -56,11 +56,11 @@ GoRouter appRouter(AppRouterRef ref) {
     routes: [
       GoRoute(
         path: '/splash',
-        builder: (_, __) => const SplashScreen(),
+        builder: (_, _) => const SplashScreen(),
       ),
       GoRoute(
         path: '/login',
-        builder: (_, __) => const LoginScreen(),
+        builder: (_, _) => const LoginScreen(),
       ),
       GoRoute(
         path: '/otp',
@@ -74,14 +74,18 @@ GoRouter appRouter(AppRouterRef ref) {
       ),
       GoRoute(
         path: '/onboarding',
-        builder: (_, __) => const OnboardingScreen(),
+        builder: (_, _) => const OnboardingScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
         routes: [
-          GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
-          GoRoute(path: '/shelter', builder: (_, __) => const ShelterScreen()),
-          GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+          GoRoute(path: '/', builder: (_, _) => const HomeScreen()),
+          GoRoute(path: '/shelter', builder: (_, _) => const ShelterScreen()),
+          GoRoute(
+            path: '/notifications',
+            builder: (_, _) => const _NotificationsPlaceholder(),
+          ),
+          GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
         ],
       ),
     ],
@@ -90,8 +94,8 @@ GoRouter appRouter(AppRouterRef ref) {
 
 class _RouterNotifier extends ChangeNotifier {
   _RouterNotifier(this._ref) {
-    _ref.listen(authStateProvider, (_, __) => notifyListeners());
-    _ref.listen(userProfileNotifierProvider, (_, __) => notifyListeners());
+    _ref.listen(authStateProvider, (_, _) => notifyListeners());
+    _ref.listen(userProfileNotifierProvider, (_, _) => notifyListeners());
   }
 
   final AppRouterRef _ref;
@@ -107,7 +111,8 @@ class MainShell extends StatelessWidget {
     final currentIndex = switch (location) {
       '/' => 0,
       '/shelter' => 1,
-      '/profile' => 2,
+      '/notifications' => 2,
+      '/profile' => 3,
       _ => 0,
     };
 
@@ -115,6 +120,7 @@ class MainShell extends StatelessWidget {
       body: child,
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         onDestinationSelected: (index) {
           switch (index) {
             case 0:
@@ -122,6 +128,8 @@ class MainShell extends StatelessWidget {
             case 1:
               context.go('/shelter');
             case 2:
+              context.go('/notifications');
+            case 3:
               context.go('/profile');
           }
         },
@@ -132,16 +140,34 @@ class MainShell extends StatelessWidget {
             label: '홈',
           ),
           NavigationDestination(
-            icon: Icon(Icons.location_on_outlined),
-            selectedIcon: Icon(Icons.location_on),
-            label: '대피소',
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map),
+            label: '쉘터',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.notifications_outlined),
+            selectedIcon: Icon(Icons.notifications),
+            label: '알림',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
-            label: '프로필',
+            label: '내 정보',
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _NotificationsPlaceholder extends StatelessWidget {
+  const _NotificationsPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: Text('알림 내역', style: TextStyle(fontSize: 18)),
       ),
     );
   }
