@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../data/datasources/group_stats_data_source.dart';
 import '../../data/repositories/user_profile_repository_impl.dart';
 import '../../domain/entities/season.dart';
 import '../../domain/entities/user_profile.dart';
@@ -26,16 +27,37 @@ class UserProfileNotifier extends _$UserProfileNotifier {
     required Season season,
     required double feelsDelta,
   }) async {
+    final current = state.valueOrNull;
     final repo = await ref.read(userProfileRepositoryProvider.future);
     await repo.addFeedback(season: season, feelsDelta: feelsDelta);
-    final current = state.valueOrNull;
+
+    // 집단 학습 Firestore 업데이트
     if (current != null) {
+      final ageKey = _ageKey(current.age);
+      await ref
+          .read(groupStatsDataSourceProvider)
+          .incrementFeedback(ageKey: ageKey, season: season, delta: feelsDelta);
+
       final updated = season.isHeat
           ? current.copyWith(
-              heatFeedbackHistory: [...current.heatFeedbackHistory, feelsDelta])
+              heatFeedbackHistory: [
+                ...current.heatFeedbackHistory,
+                feelsDelta
+              ])
           : current.copyWith(
-              coldFeedbackHistory: [...current.coldFeedbackHistory, feelsDelta]);
+              coldFeedbackHistory: [
+                ...current.coldFeedbackHistory,
+                feelsDelta
+              ]);
       state = AsyncValue.data(updated);
     }
+  }
+
+  static String _ageKey(int age) {
+    if (age <= 9) return 'infant_0to9';
+    if (age <= 17) return 'youth_10to17';
+    if (age <= 64) return 'adult_18to64';
+    if (age <= 74) return 'elderly_65to74';
+    return 'super_elderly_75plus';
   }
 }

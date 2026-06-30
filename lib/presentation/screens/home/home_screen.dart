@@ -1,14 +1,16 @@
-import 'dart:async';
-
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../data/datasources/fcm_service.dart';
+import '../../../data/datasources/local_notification_service.dart';
+import '../../../domain/entities/climate_alert.dart';
+import '../../../domain/entities/risk_level.dart';
 import '../../providers/address_provider.dart';
 import '../../providers/climate_alert_provider.dart';
 import '../../providers/location_provider.dart';
+import '../../providers/notification_history_provider.dart';
 import '../../providers/user_profile_provider.dart';
 import '../../providers/weather_provider.dart';
 import 'widgets/debug_season_bar.dart';
@@ -27,44 +29,19 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  StreamSubscription<RemoteMessage>? _fcmSub;
+  bool _fcmInited = false;
 
   @override
   void initState() {
     super.initState();
-    _fcmSub = FirebaseMessaging.onMessage.listen(_onFcmMessage);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initFcm());
   }
 
-  void _onFcmMessage(RemoteMessage message) {
-    final n = message.notification;
-    if (n == null || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (n.title != null)
-              Text(n.title!,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-            if (n.body != null) Text(n.body!),
-          ],
-        ),
-        duration: const Duration(seconds: 5),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _fcmSub?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _refresh() async {
-    ref.invalidate(locationProvider);
-    await ref.read(weatherProvider.future).catchError((e) => throw e);
+  Future<void> _initFcm() async {
+    if (_fcmInited) return;
+    _fcmInited = true;
+    await ref.read(localNotificationServiceProvider).init();
+    await ref.read(fcmServiceProvider).init();
   }
 
   @override
@@ -73,6 +50,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final alertAsync = ref.watch(climateAlertProvider);
     final profileAsync = ref.watch(userProfileNotifierProvider);
     final districtAsync = ref.watch(adminDistrictProvider);
+
+    // climateAlert 변화 감지 → 위험/경고 시 로컬 알림
+    ref.listen<AsyncValue<ClimateAlert?>>(climateAlertProvider, (prev, next) {
+      final alert = next.valueOrNull;
+      if (alert == null) return;
+
+      final prevAlert = prev?.valueOrNull;
+      final riskElevated = alert.personalRiskLevel == RiskLevel.danger ||
+          alert.personalRiskLevel == RiskLevel.warning;
+
+      // 이전과 다른 위험 단계로 변화했을 때만 알림
+      if (riskElevated && prevAlert?.personalRiskLevel != alert.personalRiskLevel) {
+        _sendClimateAlertNotification(alert);
+      }
+    });
 
     return weatherAsync.when(
       loading: () => const Scaffold(
@@ -124,6 +116,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   onSetupProfile: () => context.go('/profile'),
                                 ),
                         ),
+                        if (alert != null && !season.isNormal)
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                              child: TextButton.icon(
+                                onPressed: () => context.push('/ai-analysis'),
+                                icon: const Icon(Icons.auto_awesome, size: 14),
+                                label: const Text('AI 위험 분석 보기'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: season.isHeat
+                                      ? AppColors.heatCard
+                                      : AppColors.coldCard,
+                                ),
+                              ),
+                            ),
+                          ),
                         if (alert != null)
                           SliverToBoxAdapter(
                             child: InfoReasonRow(alert: alert),
@@ -142,5 +150,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
       },
     );
+  }
+
+  Future<void> _refresh() async {
+    ref.invalidate(locationProvider);
+    await ref.read(weatherProvider.future).catchError((e) => throw e);
+  }
+
+  void _sendClimateAlertNotification(ClimateAlert alert) {
+    final isHeat = alert.season.isHeat;
+    final level = alert.personalRiskLevel.label;
+    final season = isHeat ? '폭염' : '한파';
+    final title = '$season $level 경보';
+    final body = '체감온도 ${alert.currentFeelsLike.toStringAsFixed(1)}°C — '
+        '${isHeat ? "개인 임계치 ${alert.personalThreshold.toStringAsFixed(1)}°C 초과" : "한파 위험 감지"}. '
+        '지금 바로 확인해보세요.';
+
+    ref.read(fcmServiceProvider).showClimateAlert(
+          title: title,
+          body: body,
+          season: isHeat ? 'heat' : 'cold',
+        );
+
+    // 알림 내역 갱신
+    ref.read(notificationHistoryNotifierProvider.notifier).reload();
   }
 }

@@ -226,7 +226,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                   Center(
                     child: _secondsLeft > 0
                         ? Text(
-                            '${_secondsLeft}초 후 재전송 가능',
+                            '$_secondsLeft초 후 재전송 가능',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   color: AppColors.textSecondary,
                                 ),

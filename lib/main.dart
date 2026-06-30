@@ -8,12 +8,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_router.dart';
 import 'core/firebase/firebase_options.dart';
 import 'core/theme/app_theme.dart';
+import 'data/datasources/local_notification_service.dart';
 import 'presentation/providers/auth_provider.dart';
 
 /// FCM 백그라운드 메시지 핸들러 (최상위 함수여야 함)
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await _initFirebase();
+  // 백그라운드에서도 로컬 알림 표시
+  final n = message.notification;
+  if (n != null) {
+    final svc = LocalNotificationService();
+    await svc.init();
+    await svc.show(
+      title: n.title ?? 'ClimaGuard',
+      body: n.body ?? '',
+    );
+  }
 }
 
 Future<void> _initFirebase() async {
@@ -46,7 +57,6 @@ class ClimaGuardApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // authStateProvider 초기 로딩 중에는 스플래시 표시
     final authAsync = ref.watch(authStateProvider);
     if (authAsync.isLoading) {
       return const MaterialApp(
