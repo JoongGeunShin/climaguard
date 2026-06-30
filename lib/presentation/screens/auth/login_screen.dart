@@ -33,8 +33,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() {
       _error = null;
       if (key == '⌫') {
-        if (_digits.isNotEmpty)
+        if (_digits.isNotEmpty) {
           _digits = _digits.substring(0, _digits.length - 1);
+        }
       } else if (_digits.length < 11) {
         _digits += key;
       }
