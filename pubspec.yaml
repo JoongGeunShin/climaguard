@@ -38,9 +38,8 @@ dependencies:
   # 로컬 알림
   flutter_local_notifications: ^18.0.1
 
-  # 지도 (OpenStreetMap, 키 불필요)
-  flutter_map: ^7.0.2
-  latlong2: ^0.9.1
+  # 지도 (네이버 Dynamic Map)
+  flutter_naver_map: ^1.3.1
 
   # AI (Gemini)
   google_generative_ai: ^0.4.6
