@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/constants/app_router.dart';
@@ -27,6 +28,13 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
 
+  await FlutterNaverMap().init(
+    clientId: dotenv.env['NAVER_DYNAMICMAP_CLIENT_ID']!,
+    onAuthFailed: (ex) {
+      debugPrint('[NaverMap] 인증 실패: ${ex.message} (code: ${ex.code})');
+    },
+  );
+  debugPrint('[ENV] clientId: ${dotenv.env['NAVER_DYNAMICMAP_CLIENT_ID']}');
   await _initFirebase();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 

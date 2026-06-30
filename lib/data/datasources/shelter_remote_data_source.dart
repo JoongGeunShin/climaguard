@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -32,22 +33,39 @@ class ShelterRemoteDataSource {
     final typeCode = season.isHeat ? '1' : season.isCold ? '2' : '1';
 
     try {
+      final params = {
+        'serviceKey': Uri.decodeComponent(dotenv.env['SHELTER_API_KEY'] ?? ''),
+        'numOfRows': numOfRows,
+        'pageNo': 1,
+        'returnType': 'json',
+        'startLat': startLat.toString(),
+        'endLat': endLat.toString(),
+        'startLot': startLot.toString(),
+        'endLot': endLot.toString(),
+        'shlt_se_cd': typeCode,
+      };
+
+      if (kDebugMode) {
+        debugPrint('[Shelter] 요청 bbox: lat($startLat ~ $endLat) lon($startLot ~ $endLot) type=$typeCode');
+      }
+
       final response = await _dio.get<Map<String, dynamic>>(
         '${AppConstants.shelterBaseUrl}${AppConstants.shelterEndpoint}',
-        queryParameters: {
-          'serviceKey': Uri.decodeComponent(dotenv.env['SHELTER_API_KEY'] ?? ''),
-          'numOfRows': numOfRows,
-          'pageNo': 1,
-          'returnType': 'json',
-          'startLat': startLat.toString(),
-          'endLat': endLat.toString(),
-          'startLot': startLot.toString(),
-          'endLot': endLot.toString(),
-          'shlt_se_cd': typeCode,
-        },
+        queryParameters: params,
       );
 
-      final data = response.data!['data'];
+      if (kDebugMode) {
+        final raw = response.data;
+        debugPrint('[Shelter] 응답 전체: $raw');
+      }
+
+      final raw = response.data;
+      final data = raw?['body'];
+
+      if (kDebugMode) {
+        debugPrint('[Shelter] totalCount: ${raw?['totalCount']}, body 타입: ${data.runtimeType}, 건수: ${data is List ? data.length : 0}');
+      }
+
       if (data == null || data is! List) return [];
       return data
           .map((e) => ShelterItem.fromJson(e as Map<String, dynamic>))

@@ -29,11 +29,13 @@ Map<String, dynamic> _$ShelterApiResponseToJson(ShelterApiResponse instance) =>
 ShelterItem _$ShelterItemFromJson(Map<String, dynamic> json) => ShelterItem(
   name: json['REARE_NM'] as String,
   address: json['RONA_DADDR'] as String?,
-  latitude: json['LAT'] as String,
-  longitude: json['LOT'] as String,
+  latitude: _toDouble(json['LAT']),
+  longitude: _toDouble(json['LOT']),
   typeCode: json['SHLT_SE_CD'] as String?,
   typeName: json['SHLT_SE_NM'] as String?,
   managementNo: json['MNG_SN'] as String?,
+  operatingHours: json['OPNNG_CLSE_HR'] as String?,
+  phone: json['RST_TELNO'] as String?,
 );
 
 Map<String, dynamic> _$ShelterItemToJson(ShelterItem instance) =>
@@ -45,4 +47,6 @@ Map<String, dynamic> _$ShelterItemToJson(ShelterItem instance) =>
       'SHLT_SE_CD': instance.typeCode,
       'SHLT_SE_NM': instance.typeName,
       'MNG_SN': instance.managementNo,
+      'OPNNG_CLSE_HR': instance.operatingHours,
+      'RST_TELNO': instance.phone,
     };

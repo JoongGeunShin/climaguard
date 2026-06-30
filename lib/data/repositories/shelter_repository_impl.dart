@@ -30,6 +30,8 @@ class ShelterRepositoryImpl implements ShelterRepository {
   }) async {
     final delta = radiusKm / 111.0;
 
+    final typeCode = season.isHeat ? '1' : '2';
+
     final items = await _dataSource.fetchNearby(
       startLat: latitude - delta,
       endLat: latitude + delta,
@@ -38,7 +40,13 @@ class ShelterRepositoryImpl implements ShelterRepository {
       season: season,
     );
 
-    return items
+    // API가 typeCode 필터를 완전히 적용하지 않으므로 클라이언트에서 재필터링
+    final filtered = items.where((item) {
+      final code = item.typeCode ?? '';
+      return code.contains(typeCode);
+    });
+
+    return filtered
         .map((item) => _toShelter(item, latitude, longitude))
         .where((s) => s.distanceKm <= radiusKm)
         .toList()
@@ -46,15 +54,15 @@ class ShelterRepositoryImpl implements ShelterRepository {
   }
 
   Shelter _toShelter(ShelterItem item, double userLat, double userLon) {
-    final lat = double.tryParse(item.latitude) ?? 0;
-    final lon = double.tryParse(item.longitude) ?? 0;
     return Shelter(
-      id: item.managementNo ?? '${item.name}_$lat$lon',
+      id: item.managementNo ?? '${item.name}_${item.latitude}${item.longitude}',
       name: item.name,
-      latitude: lat,
-      longitude: lon,
-      distanceKm: _haversine(userLat, userLon, lat, lon),
+      latitude: item.latitude,
+      longitude: item.longitude,
+      distanceKm: _haversine(userLat, userLon, item.latitude, item.longitude),
       address: item.address,
+      operatingHours: item.operatingHours,
+      phone: item.phone,
     );
   }
 
