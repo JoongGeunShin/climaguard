@@ -53,6 +53,9 @@ dependencies:
   # URL 열기
   url_launcher: ^6.3.1
 
+  # 날짜 포맷
+  intl: ^0.20.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
