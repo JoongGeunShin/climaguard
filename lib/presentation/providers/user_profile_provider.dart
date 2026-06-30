@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../data/repositories/user_profile_repository_impl.dart';
+import '../../domain/entities/season.dart';
 import '../../domain/entities/user_profile.dart';
 import 'auth_provider.dart';
 
@@ -19,5 +20,22 @@ class UserProfileNotifier extends _$UserProfileNotifier {
     final repo = await ref.read(userProfileRepositoryProvider.future);
     await repo.saveProfile(profile);
     state = AsyncValue.data(profile);
+  }
+
+  Future<void> addFeedback({
+    required Season season,
+    required double feelsDelta,
+  }) async {
+    final repo = await ref.read(userProfileRepositoryProvider.future);
+    await repo.addFeedback(season: season, feelsDelta: feelsDelta);
+    final current = state.valueOrNull;
+    if (current != null) {
+      final updated = season.isHeat
+          ? current.copyWith(
+              heatFeedbackHistory: [...current.heatFeedbackHistory, feelsDelta])
+          : current.copyWith(
+              coldFeedbackHistory: [...current.coldFeedbackHistory, feelsDelta]);
+      state = AsyncValue.data(updated);
+    }
   }
 }
