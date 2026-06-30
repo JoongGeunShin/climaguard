@@ -51,14 +51,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final profileAsync = ref.watch(userProfileNotifierProvider);
     final districtAsync = ref.watch(adminDistrictProvider);
 
-    // climateAlert 변화 감지 → 위험/경고 시 로컬 알림
+    // climateAlert 변화 감지 → 주의/경고/위험 시 로컬 알림
     ref.listen<AsyncValue<ClimateAlert?>>(climateAlertProvider, (prev, next) {
       final alert = next.valueOrNull;
       if (alert == null) return;
 
       final prevAlert = prev?.valueOrNull;
       final riskElevated = alert.personalRiskLevel == RiskLevel.danger ||
-          alert.personalRiskLevel == RiskLevel.warning;
+          alert.personalRiskLevel == RiskLevel.warning ||
+          alert.personalRiskLevel == RiskLevel.caution;
 
       // 이전과 다른 위험 단계로 변화했을 때만 알림
       if (riskElevated && prevAlert?.personalRiskLevel != alert.personalRiskLevel) {
