@@ -7,9 +7,12 @@ import '../../presentation/providers/user_profile_provider.dart';
 import '../../presentation/screens/auth/login_screen.dart';
 import '../../presentation/screens/auth/otp_screen.dart';
 
+import '../../presentation/screens/ai_analysis/ai_analysis_screen.dart';
+import '../../presentation/screens/dashboard/dashboard_screen.dart';
 import '../../presentation/screens/home/home_screen.dart';
 import '../../presentation/screens/onboarding/onboarding_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
+import '../../presentation/screens/notifications/notifications_screen.dart';
 import '../../presentation/screens/shelter/shelter_screen.dart';
 import '../../presentation/screens/splash_screen.dart';
 
@@ -76,6 +79,14 @@ GoRouter appRouter(AppRouterRef ref) {
         path: '/onboarding',
         builder: (_, _) => const OnboardingScreen(),
       ),
+      GoRoute(
+        path: '/ai-analysis',
+        builder: (_, _) => const AiAnalysisScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard',
+        builder: (_, _) => const DashboardScreen(),
+      ),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
         routes: [
@@ -83,7 +94,7 @@ GoRouter appRouter(AppRouterRef ref) {
           GoRoute(path: '/shelter', builder: (_, _) => const ShelterScreen()),
           GoRoute(
             path: '/notifications',
-            builder: (_, _) => const _NotificationsPlaceholder(),
+            builder: (_, _) => const NotificationsScreen(),
           ),
           GoRoute(path: '/profile', builder: (_, _) => const ProfileScreen()),
         ],
@@ -160,15 +171,3 @@ class MainShell extends StatelessWidget {
   }
 }
 
-class _NotificationsPlaceholder extends StatelessWidget {
-  const _NotificationsPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('알림 내역', style: TextStyle(fontSize: 18)),
-      ),
-    );
-  }
-}
