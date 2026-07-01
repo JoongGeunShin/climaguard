@@ -87,9 +87,10 @@ class GetAiExplanationUseCase {
   }
 
   String _riskDesc(RiskLevel level) => switch (level) {
-        RiskLevel.safe => '안전',
-        RiskLevel.caution => '주의',
-        RiskLevel.warning => '경고',
-        RiskLevel.danger => '위험',
+        RiskLevel.safe      => '안전',
+        RiskLevel.attention => '관심',
+        RiskLevel.caution   => '주의',
+        RiskLevel.warning   => '경고',
+        RiskLevel.danger    => '위험',
       };
 }
