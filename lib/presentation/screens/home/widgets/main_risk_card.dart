@@ -107,6 +107,15 @@ class MainRiskCard extends StatelessWidget {
                                 height: 1.0,
                               ),
                             ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '기온 ${weather.temperature.toStringAsFixed(1)}°C',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -159,9 +168,15 @@ class MainRiskCard extends StatelessWidget {
   }
 
   int _riskScore(Season season) {
-    final fl = weather.feelsLike;
-    if (season.isHeat) return ((fl - 20) / 22 * 100).round().clamp(0, 100);
-    if (season.isCold) return ((-fl) / 20 * 100).round().clamp(0, 100);
+    final fl = alert.currentFeelsLike;
+    final threshold = alert.personalThreshold;
+    // 개인 임계치 기준 ±5°C 범위로 0~100 매핑
+    if (season.isHeat) {
+      return ((fl - threshold + 5) / 10 * 100).round().clamp(0, 100);
+    }
+    if (season.isCold) {
+      return ((threshold - fl + 5) / 10 * 100).round().clamp(0, 100);
+    }
     return 0;
   }
 }
