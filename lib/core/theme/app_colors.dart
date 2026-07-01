@@ -8,16 +8,18 @@ class AppColors {
   static const Color primaryLight = Color(0xFFFF8A65);
 
   // 위험 단계별 색상
-  static const Color riskWatch = Color(0xFFFFD600);    // 주의 — 노랑
-  static const Color riskWarning = Color(0xFFFF9100);  // 경고 — 주황
-  static const Color riskDanger = Color(0xFFD50000);   // 위험 — 빨강
-  static const Color riskSafe = Color(0xFF43A047);     // 안전 — 초록
+  static const Color riskSafe      = Color(0xFF43A047);  // 안전 — 초록
+  static const Color riskAttention = Color(0xFFFFF176);  // 관심 — 연노랑
+  static const Color riskWatch     = Color(0xFFFFD600);  // 주의 — 노랑
+  static const Color riskWarning   = Color(0xFFFF9100);  // 경고 — 주황
+  static const Color riskDanger    = Color(0xFFD50000);  // 위험 — 빨강
 
   // 한파 위험단계 색상
-  static const Color coldSafe    = Color(0xFF00897B); // 청록
-  static const Color coldCaution = Color(0xFF0288D1); // 하늘파랑
-  static const Color coldWarning = Color(0xFF1565C0); // 파랑
-  static const Color coldDanger  = Color(0xFF0D47A1); // 진남색
+  static const Color coldSafe      = Color(0xFF00897B);  // 청록
+  static const Color coldAttention = Color(0xFFB3E5FC);  // 관심 — 연하늘
+  static const Color coldCaution   = Color(0xFF0288D1);  // 하늘파랑
+  static const Color coldWarning   = Color(0xFF1565C0);  // 파랑
+  static const Color coldDanger    = Color(0xFF0D47A1);  // 진남색
 
   // 시즌별 배경
   static const Color heatBackground   = Color(0xFFFAEFEA);
