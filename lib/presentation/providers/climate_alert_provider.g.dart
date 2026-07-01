@@ -6,7 +6,7 @@ part of 'climate_alert_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$climateAlertHash() => r'2c8d2cd1e0c6ddf6bed6b3cd520b1548e0aac465';
+String _$climateAlertHash() => r'3bcbc15325758ba975b793de128a873d0782ddda';
 
 /// See also [climateAlert].
 @ProviderFor(climateAlert)
