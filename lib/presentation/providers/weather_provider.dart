@@ -19,9 +19,10 @@ Future<WeatherData> weather(WeatherRef ref) async {
   if (kDebugMode) {
     final override = ref.watch(debugTemperatureOverrideProvider);
     if (override != null) {
+      // override 값은 실제 기온(°C) — 체감온도는 Steadman/WindChill 공식으로 계산
       final season = Season.fromTemperature(override);
-      const debugHumidity = 60;
-      const debugWindMs = 2.0;
+      const debugHumidity = 40;   // 한국 여름 평균 습도 기준
+      const debugWindMs   = 2.0;
       final feelsLike = season.isHeat
           ? FeelsLikeCalculator.heat(override, debugHumidity)
           : season.isCold

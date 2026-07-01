@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/season_theme.dart';
 import '../../../../domain/entities/climate_alert.dart';
 import '../../../../domain/entities/season.dart';
 import '../../../../domain/entities/weather_data.dart';
@@ -21,11 +22,8 @@ class MainRiskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final season = weather.season;
-    final cardColor = season.isHeat
-        ? AppColors.heatCard
-        : season.isCold
-            ? AppColors.coldCard
-            : AppColors.normalCard;
+    final cardColor = SeasonTheme.riskColor(alert.personalRiskLevel, season);
+    final textColor = SeasonTheme.onRiskColor(alert.personalRiskLevel, season);
     final riskScore = _riskScore(season);
     final message = AlertGenerationUseCase().generate(alert: alert);
     final levelLabel = alert.personalRiskLevel.label;
@@ -61,19 +59,19 @@ class MainRiskCard extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: textColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.warning_amber_rounded,
-                            size: 14, color: Colors.white),
+                        Icon(Icons.warning_amber_rounded,
+                            size: 14, color: textColor),
                         const SizedBox(width: 4),
                         Text(
                           '내 기준 $levelLabel',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: textColor,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -92,7 +90,7 @@ class MainRiskCard extends StatelessWidget {
                             Text(
                               '지금 체감온도',
                               style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.85),
+                                color: textColor.withValues(alpha: 0.75),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -100,8 +98,8 @@ class MainRiskCard extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               '${weather.feelsLike.toStringAsFixed(1)}°',
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: textColor,
                                 fontSize: 52,
                                 fontWeight: FontWeight.w800,
                                 height: 1.0,
@@ -111,7 +109,7 @@ class MainRiskCard extends StatelessWidget {
                             Text(
                               '기온 ${weather.temperature.toStringAsFixed(1)}°C',
                               style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.7),
+                                color: textColor.withValues(alpha: 0.6),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -119,7 +117,7 @@ class MainRiskCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      _RiskScoreRing(score: riskScore),
+                      _RiskScoreRing(score: riskScore, textColor: textColor),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -128,7 +126,7 @@ class MainRiskCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.18),
+                      color: textColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
@@ -140,7 +138,7 @@ class MainRiskCard extends StatelessWidget {
                               : season.isCold
                                   ? Icons.ac_unit
                                   : Icons.check_circle_outline,
-                          color: Colors.white,
+                          color: textColor,
                           size: 18,
                         ),
                         const SizedBox(width: 8),
@@ -148,7 +146,7 @@ class MainRiskCard extends StatelessWidget {
                           child: Text(
                             message,
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.95),
+                              color: textColor.withValues(alpha: 0.9),
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                               height: 1.5,
@@ -183,7 +181,8 @@ class MainRiskCard extends StatelessWidget {
 
 class _RiskScoreRing extends StatelessWidget {
   final int score;
-  const _RiskScoreRing({required this.score});
+  final Color textColor;
+  const _RiskScoreRing({required this.score, required this.textColor});
 
   @override
   Widget build(BuildContext context) {
@@ -195,7 +194,7 @@ class _RiskScoreRing extends StatelessWidget {
         children: [
           CustomPaint(
             size: const Size(84, 84),
-            painter: _RingPainter(progress: score / 100),
+            painter: _RingPainter(progress: score / 100, color: textColor),
           ),
           Column(
             mainAxisSize: MainAxisSize.min,
@@ -203,15 +202,15 @@ class _RiskScoreRing extends StatelessWidget {
               Text(
                 '위험도',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: textColor.withValues(alpha: 0.75),
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               Text(
                 '$score',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: textColor,
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
                   height: 1.1,
@@ -227,7 +226,8 @@ class _RiskScoreRing extends StatelessWidget {
 
 class _RingPainter extends CustomPainter {
   final double progress;
-  const _RingPainter({required this.progress});
+  final Color color;
+  const _RingPainter({required this.progress, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -237,13 +237,13 @@ class _RingPainter extends CustomPainter {
     final sweepAngle = 2 * pi * progress;
 
     final trackPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.25)
+      ..color = color.withValues(alpha: 0.25)
       ..strokeWidth = 6
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     final progressPaint = Paint()
-      ..color = Colors.white
+      ..color = color
       ..strokeWidth = 6
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -259,7 +259,8 @@ class _RingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RingPainter old) => old.progress != progress;
+  bool shouldRepaint(_RingPainter old) =>
+      old.progress != progress || old.color != color;
 }
 
 class NoProfileRiskCard extends StatelessWidget {
