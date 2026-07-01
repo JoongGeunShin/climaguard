@@ -28,6 +28,23 @@ class AiAnalysisScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: bg,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.white70),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text(
+          'AI 위험 분석',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: analysisAsync.when(
         loading: () => const _LoadingView(),
         error: (e, _) =>
