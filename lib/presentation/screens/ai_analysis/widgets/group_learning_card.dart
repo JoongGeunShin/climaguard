@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../domain/entities/climate_alert.dart';
 import '../../../../domain/entities/group_stat.dart';
 import '../../../../presentation/providers/group_stats_provider.dart';
@@ -47,7 +48,17 @@ class GroupLearningCard extends ConsumerWidget {
         final count = isHeat ? stat.heatCount : stat.coldCount;
         final offset = isHeat ? stat.heatGroupOffset : stat.coldGroupOffset;
 
-        if (count == 0) return _FallbackCard(isHeat: isHeat);
+        // 피드백 없으면 연령 그룹 기반 기본 보정값으로 시연용 카드 표시
+        if (count == 0) {
+          final baseOffset = isHeat
+              ? (AppConstants.ageGroupHeatOffsets[key] ?? 0.0)
+              : (AppConstants.ageGroupColdOffsets[key] ?? 0.0);
+          return _DefaultOffsetCard(
+            isHeat: isHeat,
+            groupLabel: _ageGroupLabel(key),
+            baseOffset: baseOffset,
+          );
+        }
 
         final groupLabel = _ageGroupLabel(key);
         final seasonLabel = isHeat ? '폭염' : '한파';
@@ -177,6 +188,76 @@ class _FallbackCard extends StatelessWidget {
           Text(
             '${isHeat ? "폭염" : "한파"} 피드백을 모으고 있어요. 피드백을 남겨주시면 더 정확한 기준이 만들어져요.',
             style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 실 피드백이 없을 때 연령별 기준 보정값을 기반 안내 카드
+class _DefaultOffsetCard extends StatelessWidget {
+  const _DefaultOffsetCard({
+    required this.isHeat,
+    required this.groupLabel,
+    required this.baseOffset,
+  });
+
+  final bool isHeat;
+  final String groupLabel;
+  final double baseOffset;
+
+  @override
+  Widget build(BuildContext context) {
+    final seasonLabel = isHeat ? '폭염' : '한파';
+    final direction = isHeat
+        ? (baseOffset < 0 ? '더 민감' : '더 여유롭게')
+        : (baseOffset > 0 ? '더 일찍' : '더 늦게');
+    final sign = baseOffset >= 0 ? '+' : '';
+    final adjustLabel = '$sign${baseOffset.toStringAsFixed(1)}°C $direction';
+
+    return _CardShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.groups, color: Color(0xFFB39DDB), size: 18),
+              SizedBox(width: 6),
+              Text(
+                '집단 기준이 반영됐어요',
+                style: TextStyle(
+                  color: Color(0xFFB39DDB),
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                  color: Colors.white70, fontSize: 14, height: 1.5),
+              children: [
+                TextSpan(text: '$groupLabel 연령 그룹 특성을 반영해 $seasonLabel 임계치를\n'),
+                TextSpan(
+                  text: adjustLabel,
+                  style: const TextStyle(
+                      color: Color(0xFFCE93D8),
+                      fontWeight: FontWeight.bold),
+                ),
+                const TextSpan(text: '하게 조정했어요.'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Row(
+            children: [
+              Text('WHO 열사병 가이드라인 · 행안부 기준 적용',
+                  style: TextStyle(
+                      color: Colors.white38, fontSize: 12)),
+            ],
           ),
         ],
       ),
