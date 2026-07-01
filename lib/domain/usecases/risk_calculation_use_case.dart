@@ -98,19 +98,21 @@ class RiskCalculationUseCase {
     );
   }
 
-  /// 폭염 개인화 위험단계 — 공식 4단계 임계치에 보정값 적용
+  /// 폭염 개인화 위험단계 — 공식 5단계 임계치에 보정값 적용
   RiskLevel _heatRiskLevel(double feelsLike, double offset) {
-    if (feelsLike >= AppConstants.heatDanger  + offset) return RiskLevel.danger;
-    if (feelsLike >= AppConstants.heatAlert   + offset) return RiskLevel.warning;
-    if (feelsLike >= AppConstants.heatWarning + offset) return RiskLevel.caution;
+    if (feelsLike >= AppConstants.heatDanger   + offset) return RiskLevel.danger;
+    if (feelsLike >= AppConstants.heatAlert    + offset) return RiskLevel.warning;
+    if (feelsLike >= AppConstants.heatWarning  + offset) return RiskLevel.caution;
+    if (feelsLike >= AppConstants.heatCaution  + offset) return RiskLevel.attention;
     return RiskLevel.safe;
   }
 
-  /// 한파 개인화 위험단계 — 공식 4단계 임계치에 보정값 적용 (부등호 반전)
+  /// 한파 개인화 위험단계 — 공식 5단계 임계치에 보정값 적용 (부등호 반전)
   RiskLevel _coldRiskLevel(double feelsLike, double offset) {
-    if (feelsLike <= AppConstants.coldDanger  + offset) return RiskLevel.danger;
-    if (feelsLike <= AppConstants.coldAlert   + offset) return RiskLevel.warning;
-    if (feelsLike <= AppConstants.coldWarning + offset) return RiskLevel.caution;
+    if (feelsLike <= AppConstants.coldDanger   + offset) return RiskLevel.danger;
+    if (feelsLike <= AppConstants.coldAlert    + offset) return RiskLevel.warning;
+    if (feelsLike <= AppConstants.coldWarning  + offset) return RiskLevel.caution;
+    if (feelsLike <= AppConstants.coldCaution  + offset) return RiskLevel.attention;
     return RiskLevel.safe;
   }
 
