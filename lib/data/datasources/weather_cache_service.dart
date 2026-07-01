@@ -46,8 +46,8 @@ class WeatherCacheService {
         'feelsLike': data.feelsLike,
         'humidity': data.humidity,
         'windSpeed': data.windSpeed,
-        'officialRiskLevel': data.officialRiskLevel.index,
-        'season': data.season.index,
+        'officialRiskLevel': data.officialRiskLevel.name,
+        'season': data.season.name,
         'observedAt': data.observedAt.toIso8601String(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -61,8 +61,36 @@ class WeatherCacheService {
         feelsLike: (m['feelsLike'] as num).toDouble(),
         humidity: m['humidity'] as int,
         windSpeed: (m['windSpeed'] as num).toDouble(),
-        officialRiskLevel: RiskLevel.values[m['officialRiskLevel'] as int],
-        season: Season.values[m['season'] as int],
+        officialRiskLevel: _parseRiskLevel(m['officialRiskLevel']),
+        season: _parseSeason(m['season']),
         observedAt: DateTime.parse(m['observedAt'] as String),
       );
+
+  // 구버전(int 인덱스)·신버전(String name) 캐시 모두 처리
+  static RiskLevel _parseRiskLevel(dynamic v) {
+    if (v is String) {
+      return RiskLevel.values.firstWhere((e) => e.name == v,
+          orElse: () => RiskLevel.safe);
+    }
+    if (v is int) {
+      const legacy = [
+        RiskLevel.safe, RiskLevel.caution, RiskLevel.warning, RiskLevel.danger
+      ];
+      return (v >= 0 && v < legacy.length) ? legacy[v] : RiskLevel.safe;
+    }
+    return RiskLevel.safe;
+  }
+
+  static Season _parseSeason(dynamic v) {
+    if (v is String) {
+      return Season.values.firstWhere((e) => e.name == v,
+          orElse: () => Season.normal);
+    }
+    if (v is int) {
+      return (v >= 0 && v < Season.values.length)
+          ? Season.values[v]
+          : Season.normal;
+    }
+    return Season.normal;
+  }
 }
