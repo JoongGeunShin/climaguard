@@ -31,19 +31,22 @@ class UserProfileNotifier extends _$UserProfileNotifier {
     final repo = await ref.read(userProfileRepositoryProvider.future);
     await repo.addFeedback(season: season, feelsDelta: feelsDelta);
 
-    // 집단 학습 Firestore 업데이트
     if (current != null) {
       final ageKey = _ageKey(current.age);
+
+      // 집단 통계 누적 (기저질환 포함)
       await ref
           .read(groupStatsDataSourceProvider)
-          .incrementFeedback(ageKey: ageKey, season: season, delta: feelsDelta);
+          .incrementFeedback(
+            ageKey: ageKey,
+            season: season,
+            delta: feelsDelta,
+            conditions: current.conditions,
+          );
 
       final updated = season.isHeat
           ? current.copyWith(
-              heatFeedbackHistory: [
-                ...current.heatFeedbackHistory,
-                feelsDelta
-              ])
+              heatFeedbackHistory: [...current.heatFeedbackHistory, feelsDelta])
           : current.copyWith(
               coldFeedbackHistory: [
                 ...current.coldFeedbackHistory,
