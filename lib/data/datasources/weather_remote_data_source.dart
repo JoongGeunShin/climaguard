@@ -11,18 +11,27 @@ import '../../domain/entities/season.dart';
 import '../../domain/entities/weather_data.dart';
 import '../models/weather_forecast_response.dart';
 import 'dio_provider.dart';
+import 'weather_cache_service.dart';
 
 part 'weather_remote_data_source.g.dart';
 
 @Riverpod(keepAlive: true)
 WeatherRemoteDataSource weatherRemoteDataSource(Ref ref) {
-  return WeatherRemoteDataSource(ref.watch(dioProvider));
+  return WeatherRemoteDataSource(
+    ref.watch(dioProvider),
+    ref.watch(weatherCacheServiceProvider),
+  );
 }
 
 class WeatherRemoteDataSource {
-  WeatherRemoteDataSource(this._dio);
+  WeatherRemoteDataSource(this._dio, this._cache);
 
   final Dio _dio;
+  final WeatherCacheService _cache;
+
+  // L1: 인메모리 캐시 (세션 내 재호출 방지)
+  WeatherData? _memCache;
+  String? _memBaseKey;
 
   Future<WeatherData> fetchCurrentWeather({
     required int nx,
@@ -30,7 +39,20 @@ class WeatherRemoteDataSource {
   }) async {
     final now = DateTime.now();
     final (:date, :time) = _resolveBaseDateTime(now);
+    final baseKey = '${date}_$time';
 
+    // L1: 인메모리
+    if (_memCache != null && _memBaseKey == baseKey) return _memCache!;
+
+    // L2: Firestore (사용자 간 공유 캐시)
+    final cached = await _cache.read(nx, ny, baseKey);
+    if (cached != null) {
+      _memCache = cached;
+      _memBaseKey = baseKey;
+      return cached;
+    }
+
+    // L3: KMA API 호출
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         '${AppConstants.weatherBaseUrl}${AppConstants.shortForecastPath}',
@@ -46,8 +68,14 @@ class WeatherRemoteDataSource {
         },
       );
 
+      _checkKmaHeader(response.data!);
       final parsed = WeatherForecastResponse.fromJson(response.data!);
-      return _toWeatherData(parsed.response.body.items.items, now);
+      final result = _toWeatherData(parsed.response.body.items.items, now);
+
+      _memCache = result;
+      _memBaseKey = baseKey;
+      _cache.write(nx, ny, baseKey, result); // 백그라운드 저장
+      return result;
     } on DioException catch (e) {
       final status = e.response?.statusCode;
       if (status == 429) {
@@ -55,6 +83,9 @@ class WeatherRemoteDataSource {
       }
       if (status == 401 || status == 403) {
         throw Exception('날씨 API 인증에 실패했습니다. API 키를 확인해주세요.');
+      }
+      if (status == 502 || status == 503) {
+        throw Exception('기상청 서버가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해주세요.');
       }
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout) {
@@ -108,6 +139,23 @@ class WeatherRemoteDataSource {
       observedAt: at,
       nextUpdateAt: at.add(const Duration(hours: 1)),
     );
+  }
+
+  // 기상청 API는 에러 시에도 HTTP 200을 반환하고 body에 resultCode를 담음
+  void _checkKmaHeader(Map<String, dynamic> data) {
+    final header = (data['response'] as Map<String, dynamic>?)?['header']
+        as Map<String, dynamic>?;
+    final code = header?['resultCode'] as String?;
+    if (code == null || code == '00') return;
+
+    throw Exception(switch (code) {
+      '22' => 'API 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.',
+      '20' || '21' => '날씨 API 접근이 거부됐습니다. API 키를 확인해주세요.',
+      '30' || '31' => '등록되지 않았거나 만료된 API 키입니다.',
+      '03' => '해당 지역의 날씨 데이터가 없습니다.',
+      '05' => '기상청 서버 응답 시간이 초과됐습니다. 잠시 후 다시 시도해주세요.',
+      _ => '날씨 정보를 불러오지 못했습니다. (KMA-$code)',
+    });
   }
 
   /// 폭염 체감온도 — Steadman 간이식 (기온 27°C 이상에서 유효)
