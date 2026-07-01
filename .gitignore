@@ -5996,3 +5996,5 @@ app.*.map.json
 /functions/package.json
 /functions/package-lock.json
 /functions/tsconfig.json
+/lib/data/datasources/ai_group_offset_service.dart
+/lib/data/datasources/ai_group_offset_service.g.dart
