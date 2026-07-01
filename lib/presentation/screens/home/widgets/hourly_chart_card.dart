@@ -160,6 +160,15 @@ class _BarRow extends StatelessWidget {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Text(
+              '${fl.round()}°',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: isCurrent ? currentColor : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 4),
             Container(
               width: 44,
               height: barH,
@@ -184,40 +193,45 @@ class _BarRow extends StatelessWidget {
   }
 
   RiskLevel _heatLevel(double fl) {
-    if (fl >= AppConstants.heatDanger) return RiskLevel.danger;
-    if (fl >= AppConstants.heatAlert) return RiskLevel.warning;
+    if (fl >= AppConstants.heatDanger)  return RiskLevel.danger;
+    if (fl >= AppConstants.heatAlert)   return RiskLevel.warning;
     if (fl >= AppConstants.heatWarning) return RiskLevel.caution;
+    if (fl >= AppConstants.heatCaution) return RiskLevel.attention;
     return RiskLevel.safe;
   }
 
   RiskLevel _coldLevel(double fl) {
-    if (fl <= AppConstants.coldDanger) return RiskLevel.danger;
-    if (fl <= AppConstants.coldAlert) return RiskLevel.warning;
+    if (fl <= AppConstants.coldDanger)  return RiskLevel.danger;
+    if (fl <= AppConstants.coldAlert)   return RiskLevel.warning;
     if (fl <= AppConstants.coldWarning) return RiskLevel.caution;
+    if (fl <= AppConstants.coldCaution) return RiskLevel.attention;
     return RiskLevel.safe;
   }
 
   Color _barColor(RiskLevel level, Season season) {
     if (season.isHeat) {
       return switch (level) {
-        RiskLevel.safe    => const Color(0xFFFFDDCC),
-        RiskLevel.caution => const Color(0xFFFFB899),
-        RiskLevel.warning => const Color(0xFFFF7A50),
-        RiskLevel.danger  => AppColors.heatCard,
+        RiskLevel.safe      => const Color(0xFFFFDDCC),
+        RiskLevel.attention => const Color(0xFFFFF176),
+        RiskLevel.caution   => const Color(0xFFFFB899),
+        RiskLevel.warning   => const Color(0xFFFF7A50),
+        RiskLevel.danger    => AppColors.heatCard,
       };
     } else if (season.isCold) {
       return switch (level) {
-        RiskLevel.safe    => const Color(0xFFCCDDF5),
-        RiskLevel.caution => const Color(0xFF9AB6E8),
-        RiskLevel.warning => const Color(0xFF5580CC),
-        RiskLevel.danger  => AppColors.coldCard,
+        RiskLevel.safe      => const Color(0xFFCCDDF5),
+        RiskLevel.attention => const Color(0xFFB3E5FC),
+        RiskLevel.caution   => const Color(0xFF9AB6E8),
+        RiskLevel.warning   => const Color(0xFF5580CC),
+        RiskLevel.danger    => AppColors.coldCard,
       };
     } else {
       return switch (level) {
-        RiskLevel.safe    => const Color(0xFFB8DDB8),
-        RiskLevel.caution => const Color(0xFF80C080),
-        RiskLevel.warning => const Color(0xFF4CAF50),
-        RiskLevel.danger  => AppColors.normalCard,
+        RiskLevel.safe      => const Color(0xFFB8DDB8),
+        RiskLevel.attention => const Color(0xFFA5D6A7),
+        RiskLevel.caution   => const Color(0xFF80C080),
+        RiskLevel.warning   => const Color(0xFF4CAF50),
+        RiskLevel.danger    => AppColors.normalCard,
       };
     }
   }
