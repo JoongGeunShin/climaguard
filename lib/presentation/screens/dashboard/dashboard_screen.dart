@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../presentation/providers/group_stats_provider.dart';
 import 'models/demo_stats.dart';
 import 'widgets/age_group_stats_section.dart';
 import 'widgets/risk_distribution_section.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen>
+class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabCtrl;
 
@@ -170,40 +172,65 @@ class _DashboardScreenState extends State<DashboardScreen>
                       ],
                     ),
                     const SizedBox(height: 10),
-                    Text(
-                      '총 ${_totalFeedbacks()}개의 피드백이 쌓였어요.\n'
-                      '다음 단계(Phase 3)까지 ${500 - _totalFeedbacks()}개 남았어요.',
-                      style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
-                          height: 1.5),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Text(
-                          'Phase 2 · 실데이터 학습 중',
-                          style: TextStyle(
-                              color: Colors.white38, fontSize: 11),
+                    ref.watch(groupStatsProvider).when(
+                      loading: () => const SizedBox(
+                        height: 40,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFFB39DDB), strokeWidth: 2),
                         ),
-                        const Spacer(),
-                        Text(
-                          '${_totalFeedbacks()} / 500',
-                          style: const TextStyle(
-                              color: Colors.white54, fontSize: 11),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: _totalFeedbacks() / 500,
-                        backgroundColor: Colors.white12,
-                        valueColor: const AlwaysStoppedAnimation(
-                            Color(0xFFB39DDB)),
-                        minHeight: 6,
                       ),
+                      error: (_, _) => const SizedBox.shrink(),
+                      data: (stats) {
+                        const phaseGoal = 500;
+                        final total = stats.fold(
+                            0, (s, g) => s + g.totalFeedbacks);
+                        final remaining = (phaseGoal - total).clamp(0, phaseGoal);
+                        final progress = (total / phaseGoal).clamp(0.0, 1.0);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              total == 0
+                                  ? '아직 피드백이 없어요.\n첫 번째 피드백을 남겨보세요!'
+                                  : remaining == 0
+                                      ? '총 $total개의 피드백이 쌓였어요.\nPhase 3 목표를 달성했어요! 🎉'
+                                      : '총 $total개의 피드백이 쌓였어요.\n다음 단계(Phase 3)까지 $remaining개 남았어요.',
+                              style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 13,
+                                  height: 1.5),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Text(
+                                  'Phase 2 · 실데이터 학습 중',
+                                  style: TextStyle(
+                                      color: Colors.white38, fontSize: 11),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  '$total / $phaseGoal',
+                                  style: const TextStyle(
+                                      color: Colors.white54, fontSize: 11),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: progress,
+                                backgroundColor: Colors.white12,
+                                valueColor: const AlwaysStoppedAnimation(
+                                    Color(0xFFB39DDB)),
+                                minHeight: 6,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -215,8 +242,4 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  int _totalFeedbacks() => demoAgeGroups.fold(
-      0,
-      (sum, g) =>
-          sum + g.totalHeatFeedbacks + g.totalColdFeedbacks);
 }

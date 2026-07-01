@@ -11,11 +11,11 @@ class AgeGroupStatsSection extends ConsumerWidget {
   final bool isHeat;
 
   static const _meta = {
-    'super_elderly_75plus': ('초고위험군', '75세 이상', 20),
-    'elderly_65to74': ('고령 위험군', '65~74세', 28),
-    'adult_18to64': ('성인', '18~64세', 35),
-    'youth_10to17': ('청소년', '10~17세', 12),
-    'infant_0to9': ('영유아', '0~9세', 5),
+    'super_elderly_75plus': ('초고위험군', '75세 이상'),
+    'elderly_65to74': ('고령 위험군', '65~74세'),
+    'adult_18to64': ('성인', '18~64세'),
+    'youth_10to17': ('청소년', '10~17세'),
+    'infant_0to9': ('영유아', '0~9세'),
   };
 
   static const _orderedKeys = [
@@ -49,11 +49,7 @@ class AgeGroupStatsSection extends ConsumerWidget {
             ),
           ),
           error: (_, _) => _buildTable(_demoStats()),
-          data: (stats) {
-            final hasRealData = stats.any((s) => s.totalFeedbacks > 0);
-            final rows = hasRealData ? _mergedStats(stats) : _demoStats();
-            return _buildTable(rows);
-          },
+          data: (stats) => _buildTable(_mergedStats(stats)),
         ),
       ],
     );
@@ -64,7 +60,6 @@ class AgeGroupStatsSection extends ConsumerWidget {
             key: g.key,
             label: g.label,
             ageRange: g.ageRange,
-            count: g.count,
             feedbacks: isHeat ? g.totalHeatFeedbacks : g.totalColdFeedbacks,
             offset: isHeat ? g.heatGroupOffset : g.coldGroupOffset,
             isDemo: true,
@@ -75,15 +70,14 @@ class AgeGroupStatsSection extends ConsumerWidget {
     return _orderedKeys.map((key) {
       final stat = stats.firstWhere((s) => s.ageKey == key,
           orElse: () => GroupStat.empty(key));
-      final (label, ageRange, count) = _meta[key]!;
+      final (label, ageRange) = _meta[key]!;
       return _RowData(
         key: key,
         label: label,
         ageRange: ageRange,
-        count: count,
         feedbacks: isHeat ? stat.heatCount : stat.coldCount,
         offset: isHeat ? stat.heatGroupOffset : stat.coldGroupOffset,
-        isDemo: false,
+        isDemo: stat.totalFeedbacks == 0,
       );
     }).toList();
   }
@@ -161,7 +155,7 @@ class AgeGroupStatsSection extends ConsumerWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            '${g.count}명 · 피드백 ${g.feedbacks}개',
+                            g.isDemo ? '피드백 ${g.feedbacks}개 (데모)' : '피드백 ${g.feedbacks}개',
                             style: TextStyle(
                                 fontSize: 12, color: Colors.grey[600]),
                           ),
@@ -220,7 +214,6 @@ class _RowData {
     required this.key,
     required this.label,
     required this.ageRange,
-    required this.count,
     required this.feedbacks,
     required this.offset,
     required this.isDemo,
@@ -229,7 +222,6 @@ class _RowData {
   final String key;
   final String label;
   final String ageRange;
-  final int count;
   final int feedbacks;
   final double offset;
   final bool isDemo;
