@@ -29,31 +29,29 @@ class DebugSeasonBar extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 10),
-          _Chip(
-            label: '일반 20°',
-            selected: override == 20.0,
-            color: Colors.green,
-            onTap: () => ref
-                .read(debugTemperatureOverrideProvider.notifier)
-                .state = override == 20.0 ? null : 20.0,
-          ),
-          const SizedBox(width: 6),
-          _Chip(
-            label: '폭염 36°',
-            selected: override == 36.0,
-            color: Colors.deepOrange,
-            onTap: () => ref
-                .read(debugTemperatureOverrideProvider.notifier)
-                .state = override == 36.0 ? null : 36.0,
-          ),
-          const SizedBox(width: 6),
-          _Chip(
-            label: '한파 -10°',
-            selected: override == -10.0,
-            color: Colors.blue,
-            onTap: () => ref
-                .read(debugTemperatureOverrideProvider.notifier)
-                .state = override == -10.0 ? null : -10.0,
+          GestureDetector(
+            onTap: () => _showTempInput(context, ref, override),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+              decoration: BoxDecoration(
+                color: override != null
+                    ? Colors.orange
+                    : Colors.orange.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange, width: 1),
+              ),
+              child: Text(
+                override != null
+                    ? '기온 ${override.toStringAsFixed(1)}°C'
+                    : '온도 설정',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: override != null ? Colors.white : Colors.orange,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
           const Spacer(),
           if (override != null)
@@ -70,42 +68,48 @@ class DebugSeasonBar extends ConsumerWidget {
       ),
     );
   }
-}
 
-class _Chip extends StatelessWidget {
-  const _Chip({
-    required this.label,
-    required this.selected,
-    required this.color,
-    required this.onTap,
-  });
+  void _showTempInput(
+      BuildContext context, WidgetRef ref, double? current) {
+    final controller = TextEditingController(
+      text: current?.toStringAsFixed(1) ?? '',
+    );
 
-  final String label;
-  final bool selected;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-        decoration: BoxDecoration(
-          color: selected ? color : color.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color, width: 1),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: selected ? Colors.white : color,
-            fontWeight: FontWeight.w600,
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('기온 입력'),
+        content: TextField(
+          controller: controller,
+          keyboardType:
+              const TextInputType.numberWithOptions(decimal: true, signed: true),
+          decoration: const InputDecoration(
+            hintText: '예: 36.0',
+            suffixText: '°C',
+            border: OutlineInputBorder(),
           ),
+          autofocus: true,
+          onSubmitted: (_) => _apply(ctx, ref, controller.text),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => _apply(ctx, ref, controller.text),
+            child: const Text('적용'),
+          ),
+        ],
       ),
     );
+  }
+
+  void _apply(BuildContext ctx, WidgetRef ref, String text) {
+    final value = double.tryParse(text);
+    if (value != null) {
+      ref.read(debugTemperatureOverrideProvider.notifier).state = value;
+    }
+    Navigator.pop(ctx);
   }
 }
