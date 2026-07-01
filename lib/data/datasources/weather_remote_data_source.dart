@@ -1,11 +1,10 @@
-import 'dart:math';
-
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/utils/feels_like_calculator.dart';
 import '../../domain/entities/risk_level.dart';
 import '../../domain/entities/season.dart';
 import '../../domain/entities/weather_data.dart';
@@ -118,8 +117,8 @@ class WeatherRemoteDataSource {
     final season = Season.fromTemperature(temperature);
 
     final feelsLike = switch (season) {
-      Season.heat   => _heatFeelsLike(temperature, humidity),
-      Season.cold   => _coldFeelsLike(temperature, windSpeed),
+      Season.heat   => FeelsLikeCalculator.heat(temperature, humidity),
+      Season.cold   => FeelsLikeCalculator.cold(temperature, windSpeed),
       Season.normal => temperature,
     };
 
@@ -156,29 +155,6 @@ class WeatherRemoteDataSource {
       '05' => '기상청 서버 응답 시간이 초과됐습니다. 잠시 후 다시 시도해주세요.',
       _ => '날씨 정보를 불러오지 못했습니다. (KMA-$code)',
     });
-  }
-
-  /// 폭염 체감온도 — Steadman 간이식 (기온 27°C 이상에서 유효)
-  double _heatFeelsLike(double t, int reh) {
-    if (t < 27) return t;
-    return -8.784695 +
-        1.61139411 * t +
-        2.338549 * reh -
-        0.14611605 * t * reh -
-        0.012308094 * t * t -
-        0.016424828 * reh * reh +
-        0.002211732 * t * t * reh +
-        0.00072546 * t * reh * reh -
-        0.000003582 * t * t * reh * reh;
-  }
-
-  /// 한파 체감온도 — 기상청 공식 WindChill (기온 10°C 이하, 풍속 1 m/s 이상)
-  /// 공식: 13.12 + 0.6215×T - 11.37×V^0.16 + 0.3965×T×V^0.16  (V: km/h)
-  double _coldFeelsLike(double t, double wsdMs) {
-    if (t > 10 || wsdMs < 1) return t;
-    final vKmh = wsdMs * 3.6;
-    final v16 = pow(vKmh, 0.16).toDouble();
-    return 13.12 + 0.6215 * t - 11.37 * v16 + 0.3965 * t * v16;
   }
 
   RiskLevel _heatOfficialRisk(double feelsLike) {
