@@ -67,39 +67,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
     });
 
-    return weatherAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.normalBackground,
-        body: Center(child: HomeLoadingBody()),
-      ),
-      error: (e, _) => Scaffold(
-        backgroundColor: AppColors.background,
-        body: SafeArea(
-          child: HomeErrorBody(
-            message: e.toString().replaceFirst('Exception: ', ''),
-            onRetry: () => ref.invalidate(locationProvider),
-          ),
-        ),
-      ),
-      data: (weather) {
-        final season = weather.season;
-        final bg = season.isHeat
-            ? AppColors.heatBackground
-            : season.isCold
-                ? AppColors.coldBackground
-                : AppColors.normalBackground;
-        final alert = alertAsync.valueOrNull;
-        final profile = profileAsync.valueOrNull;
-        final district = districtAsync.valueOrNull;
+    final season = weatherAsync.valueOrNull?.season;
+    final bg = season?.isHeat == true
+        ? AppColors.heatBackground
+        : season?.isCold == true
+            ? AppColors.coldBackground
+            : AppColors.normalBackground;
 
-        return Scaffold(
-          backgroundColor: bg,
-          body: SafeArea(
-            child: Column(
-              children: [
-                const DebugSeasonBar(),
-                Expanded(
-                  child: RefreshIndicator(
+    return Scaffold(
+      backgroundColor: bg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            const DebugSeasonBar(),
+            Expanded(
+              child: weatherAsync.when(
+                loading: () => const Center(child: HomeLoadingBody()),
+                error: (e, _) => HomeErrorBody(
+                  message: e.toString().replaceFirst('Exception: ', ''),
+                  onRetry: () => ref.invalidate(locationProvider),
+                ),
+                data: (weather) {
+                  final alert = alertAsync.valueOrNull;
+                  final profile = profileAsync.valueOrNull;
+                  final district = districtAsync.valueOrNull;
+
+                  return RefreshIndicator(
                     onRefresh: _refresh,
                     child: CustomScrollView(
                       slivers: [
@@ -113,11 +106,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           child: alert != null
                               ? MainRiskCard(weather: weather, alert: alert)
                               : NoProfileRiskCard(
-                                  season: season,
+                                  season: weather.season,
                                   onSetupProfile: () => context.go('/profile'),
                                 ),
                         ),
-                        if (alert != null && !season.isNormal)
+                        if (alert != null && !weather.season.isNormal)
                           SliverToBoxAdapter(
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
@@ -126,7 +119,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 icon: const Icon(Icons.auto_awesome, size: 14),
                                 label: const Text('AI 위험 분석 보기'),
                                 style: TextButton.styleFrom(
-                                  foregroundColor: season.isHeat
+                                  foregroundColor: weather.season.isHeat
                                       ? AppColors.heatCard
                                       : AppColors.coldCard,
                                 ),
@@ -143,13 +136,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         const SliverToBoxAdapter(child: SizedBox(height: 24)),
                       ],
                     ),
-                  ),
-                ),
-              ],
+                  );
+                },
+              ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 
