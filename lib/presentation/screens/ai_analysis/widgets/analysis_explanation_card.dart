@@ -13,17 +13,19 @@ class AnalysisExplanationCard extends StatelessWidget {
   final String explanation;
 
   String get _riskEmoji => switch (alert.personalRiskLevel) {
-        RiskLevel.safe => '😌',
-        RiskLevel.caution => '😟',
-        RiskLevel.warning => '😰',
-        RiskLevel.danger => '🤯',
+        RiskLevel.safe      => '😌',
+        RiskLevel.attention => '🙂',
+        RiskLevel.caution   => '😟',
+        RiskLevel.warning   => '😰',
+        RiskLevel.danger    => '🤯',
       };
 
   String get _riskTitle => switch (alert.personalRiskLevel) {
-        RiskLevel.safe => '지금은 안전 단계예요',
-        RiskLevel.caution => '지금은 주의 단계예요',
-        RiskLevel.warning => '지금은 경고 단계예요',
-        RiskLevel.danger => '지금은 위험 단계예요',
+        RiskLevel.safe      => '지금은 안전 단계예요',
+        RiskLevel.attention => '지금은 관심 단계예요',
+        RiskLevel.caution   => '지금은 주의 단계예요',
+        RiskLevel.warning   => '지금은 경고 단계예요',
+        RiskLevel.danger    => '지금은 위험 단계예요',
       };
 
   @override
