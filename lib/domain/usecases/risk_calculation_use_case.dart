@@ -1,4 +1,5 @@
 import '../../core/constants/app_constants.dart';
+ import '../../data/datasources/ai_group_offset_service.dart';
 import '../entities/climate_alert.dart';
 import '../entities/risk_level.dart';
 import '../entities/user_profile.dart';
@@ -8,6 +9,7 @@ class RiskCalculationUseCase {
   ClimateAlert calculate({
     required UserProfile profile,
     required WeatherData weather,
+    AiGroupOffset aiGroupOffset = AiGroupOffset.zero,
   }) {
     final season = weather.season;
 
@@ -63,6 +65,17 @@ class RiskCalculationUseCase {
           '개인 피드백 반영 (${_sign(feedbackOffset)}${feedbackOffset.abs().toStringAsFixed(1)}°C)',
         );
       }
+    }
+
+    // AI 집단 피드백 보정 (Cloud Functions Gemini 분석 결과)
+    final groupOffset = season.isHeat
+        ? aiGroupOffset.heatOffset
+        : aiGroupOffset.coldOffset;
+    if (groupOffset.abs() >= 0.1) {
+      totalOffset += groupOffset;
+      reasons.add(
+        'AI 집단 분석 반영 (${_sign(groupOffset)}${groupOffset.abs().toStringAsFixed(1)}°C)',
+      );
     }
 
     // 공식 기준값 (adult 기준) + 총 보정
