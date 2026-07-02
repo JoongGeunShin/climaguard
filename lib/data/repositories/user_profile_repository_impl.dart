@@ -51,4 +51,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       remote.addFeedback(season: season, delta: feelsDelta),
     ]);
   }
+
+  @override
+  Future<void> clearLocalCache() => local.clearProfile();
 }

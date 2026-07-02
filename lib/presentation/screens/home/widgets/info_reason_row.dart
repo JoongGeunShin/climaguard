@@ -38,36 +38,80 @@ class InfoReasonRow extends StatelessWidget {
     final reasonText = reasons.isNotEmpty ? reasons.join('·') : '나이';
     final sensitiveLabel = isHeat ? '더 민감하게 경보해요' : '일찍 경보해요';
 
+    // 체감온도 자체는 건드리지 않고, "이 조건이 일반 성인에게는 몇 도짜리
+    // 위험과 같은지"를 별도 파생 지표로만 보여준다.
+    final equivalentTemp = alert.currentFeelsLike - offset;
+    final showEquivalent = offset.abs() >= 0.1;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline,
-              size: 15, color: AppColors.textSecondary),
-          const SizedBox(width: 6),
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.info_outline,
+                  size: 15, color: AppColors.textSecondary),
+              const SizedBox(width: 6),
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      height: 1.5,
+                    ),
+                    children: [
+                      TextSpan(text: '$reasonText 반영해 '),
+                      TextSpan(
+                        text: '$offsetAbs°C $sensitiveLabel',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF333333),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                children: [
-                  TextSpan(text: '$reasonText 반영해 '),
-                  TextSpan(
-                    text: '$offsetAbs°C $sensitiveLabel',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF333333),
+              ),
+            ],
+          ),
+          if (showEquivalent) ...[
+            const SizedBox(height: 4),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.compare_arrows,
+                    size: 15, color: AppColors.textSecondary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                        height: 1.5,
+                      ),
+                      children: [
+                        const TextSpan(text: '당신에게는 '),
+                        TextSpan(
+                          text: '성인 기준 ${equivalentTemp.toStringAsFixed(1)}°C',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF333333),
+                          ),
+                        ),
+                        const TextSpan(text: ' 수준의 위험이에요'),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ),
+          ],
         ],
       ),
     );

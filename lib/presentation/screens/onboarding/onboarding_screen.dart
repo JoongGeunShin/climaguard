@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../../domain/entities/user_profile.dart';
 import '../../providers/user_profile_provider.dart';
 import '../../widgets/climaguard_logo.dart';
@@ -111,22 +110,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return '초고위험군 · 75세 이상';
   }
 
-  double _baseHeatOffset(int age) {
-    final String ageKey;
-    if (age <= 9) {
-      ageKey = 'infant_0to9';
-    } else if (age <= 17) {
-      ageKey = 'youth_10to17';
-    } else if (age <= 64) {
-      ageKey = 'adult_18to64';
-    } else if (age <= 74) {
-      ageKey = 'elderly_65to74';
-    } else {
-      ageKey = 'super_elderly_75plus';
-    }
-    return AppConstants.ageGroupHeatOffsets[ageKey]!;
-  }
-
   bool get _healthValid =>
       _gender != null && (_noCondition || _selectedConditions.isNotEmpty);
 
@@ -193,7 +176,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     noCondition: _noCondition,
                     conditionOptions: _conditionOptions,
                     riskGroupLabel: _riskGroupLabel(_age),
-                    heatOffset: _baseHeatOffset(_age),
+                    conditions: _noCondition ? const [] : _storageConditions,
                     isSaving: _isSaving,
                     isValid: _healthValid,
                     onDecrement: () => setState(() { if (_age > 1) _age--; }),

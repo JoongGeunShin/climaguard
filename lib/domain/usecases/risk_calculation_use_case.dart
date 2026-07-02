@@ -1,5 +1,4 @@
-import '../../core/constants/app_constants.dart';
- import '../../data/datasources/ai_group_offset_service.dart';
+import '../entities/age_thresholds.dart';
 import '../entities/climate_alert.dart';
 import '../entities/risk_level.dart';
 import '../entities/user_profile.dart';
@@ -9,11 +8,13 @@ class RiskCalculationUseCase {
   ClimateAlert calculate({
     required UserProfile profile,
     required WeatherData weather,
-    AiGroupOffset aiGroupOffset = AiGroupOffset.zero,
+    required BaseThresholds base,
+    required AgeOffsets ageOffsets,
+    required double conditionHeatOffset,
+    required double conditionColdOffset,
   }) {
     final season = weather.season;
 
-    // 적정온도 구간(14~24°C): 더위·추위 위험 없음
     if (season.isNormal) {
       return ClimateAlert(
         season: season,
@@ -27,65 +28,45 @@ class RiskCalculationUseCase {
     }
 
     final reasons = <String>[];
+    reasons.add('${_ageLabel(profile.age)} 기준 보정값 적용');
 
-    final ageKey = _ageKey(profile.age);
-    final baseOffset = season.isHeat
-        ? AppConstants.ageGroupHeatOffsets[ageKey]!
-        : AppConstants.ageGroupColdOffsets[ageKey]!;
-
-    double totalOffset = baseOffset;
-    reasons.add(
-      '${_ageLabel(profile.age)} ${season.label} 보정 '
-      '${_sign(baseOffset)}${baseOffset.abs()}°C',
-    );
-
-    // 기저질환 보정
-    final conditionOffsets = season.isHeat
-        ? AppConstants.conditionHeatOffsets
-        : AppConstants.conditionColdOffsets;
-
-    for (final condition in profile.conditions) {
-      final delta = conditionOffsets[condition];
-      if (delta != null && delta != 0) {
-        totalOffset += delta;
-        reasons.add('$condition 보정 ${_sign(delta)}${delta.abs()}°C');
+    // 기저질환 보정 사유
+    for (final c in profile.conditions) {
+      final delta =
+          season.isHeat ? conditionHeatOffset : conditionColdOffset;
+      if (delta.abs() >= 0.1) {
+        reasons.add('$c 보정 ${_sign(delta)}${delta.abs().toStringAsFixed(1)}°C');
       }
     }
 
-    // 개인 피드백 누적 보정 (평균의 20%, ±3°C 클램핑)
+    // 개인 피드백 보정 (평균의 20%, ±3°C 클램핑)
     final feedbacks = season.isHeat
         ? profile.heatFeedbackHistory
         : profile.coldFeedbackHistory;
+    double feedbackOffset = 0.0;
     if (feedbacks.isNotEmpty) {
       final avg = feedbacks.reduce((a, b) => a + b) / feedbacks.length;
-      final feedbackOffset = (avg * 0.2).clamp(-3.0, 3.0);
+      feedbackOffset = (avg * 0.2).clamp(-3.0, 3.0);
       if (feedbackOffset.abs() >= 0.1) {
-        totalOffset += feedbackOffset;
         reasons.add(
           '개인 피드백 반영 (${_sign(feedbackOffset)}${feedbackOffset.abs().toStringAsFixed(1)}°C)',
         );
       }
     }
 
-    // AI 집단 피드백 보정 (Cloud Functions Gemini 분석 결과)
-    final groupOffset = season.isHeat
-        ? aiGroupOffset.heatOffset
-        : aiGroupOffset.coldOffset;
-    if (groupOffset.abs() >= 0.1) {
-      totalOffset += groupOffset;
-      reasons.add(
-        'AI 집단 분석 반영 (${_sign(groupOffset)}${groupOffset.abs().toStringAsFixed(1)}°C)',
-      );
-    }
+    // 개인 보정합 (기저질환 + 피드백) — 연령 보정은 단계별로 별도 적용
+    final personalHeatOff = conditionHeatOffset + feedbackOffset;
+    final personalColdOff = conditionColdOffset + feedbackOffset;
 
-    // 공식 기준값 (adult 기준) + 총 보정
-    final baseThreshold = season.isHeat ? AppConstants.heatAlert : AppConstants.coldAlert;
-    final personalThreshold = baseThreshold + totalOffset;
+    // 경고 단계 기준점으로 personalThreshold 표시
+    final personalThreshold = season.isHeat
+        ? base.heatWarning + ageOffsets.heat.warning + personalHeatOff
+        : base.coldWarning + ageOffsets.cold.warning + personalColdOff;
 
     final feelsLike = weather.feelsLike;
     final personalRiskLevel = season.isHeat
-        ? _heatRiskLevel(feelsLike, totalOffset)
-        : _coldRiskLevel(feelsLike, totalOffset);
+        ? _heatRiskLevel(feelsLike, base, ageOffsets.heat, personalHeatOff)
+        : _coldRiskLevel(feelsLike, base, ageOffsets.cold, personalColdOff);
 
     return ClimateAlert(
       season: season,
@@ -98,30 +79,22 @@ class RiskCalculationUseCase {
     );
   }
 
-  /// 폭염 개인화 위험단계 — 공식 5단계 임계치에 보정값 적용
-  RiskLevel _heatRiskLevel(double feelsLike, double offset) {
-    if (feelsLike >= AppConstants.heatDanger   + offset) return RiskLevel.danger;
-    if (feelsLike >= AppConstants.heatAlert    + offset) return RiskLevel.warning;
-    if (feelsLike >= AppConstants.heatWarning  + offset) return RiskLevel.caution;
-    if (feelsLike >= AppConstants.heatCaution  + offset) return RiskLevel.attention;
+  RiskLevel _heatRiskLevel(
+      double fl, BaseThresholds b, LevelOffsets age, double personal) {
+    if (fl >= b.heatDanger    + age.danger    + personal) return RiskLevel.danger;
+    if (fl >= b.heatWarning   + age.warning   + personal) return RiskLevel.warning;
+    if (fl >= b.heatCaution   + age.caution   + personal) return RiskLevel.caution;
+    if (fl >= b.heatAttention + age.attention + personal) return RiskLevel.attention;
     return RiskLevel.safe;
   }
 
-  /// 한파 개인화 위험단계 — 공식 5단계 임계치에 보정값 적용 (부등호 반전)
-  RiskLevel _coldRiskLevel(double feelsLike, double offset) {
-    if (feelsLike <= AppConstants.coldDanger   + offset) return RiskLevel.danger;
-    if (feelsLike <= AppConstants.coldAlert    + offset) return RiskLevel.warning;
-    if (feelsLike <= AppConstants.coldWarning  + offset) return RiskLevel.caution;
-    if (feelsLike <= AppConstants.coldCaution  + offset) return RiskLevel.attention;
+  RiskLevel _coldRiskLevel(
+      double fl, BaseThresholds b, LevelOffsets age, double personal) {
+    if (fl <= b.coldDanger    + age.danger    + personal) return RiskLevel.danger;
+    if (fl <= b.coldWarning   + age.warning   + personal) return RiskLevel.warning;
+    if (fl <= b.coldCaution   + age.caution   + personal) return RiskLevel.caution;
+    if (fl <= b.coldAttention + age.attention + personal) return RiskLevel.attention;
     return RiskLevel.safe;
-  }
-
-  String _ageKey(int age) {
-    if (age <= 9)  return 'infant_0to9';
-    if (age <= 17) return 'youth_10to17';
-    if (age <= 64) return 'adult_18to64';
-    if (age <= 74) return 'elderly_65to74';
-    return 'super_elderly_75plus';
   }
 
   String _ageLabel(int age) {

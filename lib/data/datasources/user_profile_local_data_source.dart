@@ -66,4 +66,14 @@ class UserProfileLocalDataSource {
 
   List<double> _loadFeedbacks(String key) =>
       (_prefs.getStringList(key) ?? []).map(double.parse).toList();
+
+  /// 로그아웃 시 호출 — 다음 로그인 계정이 이 기기의 이전 계정 캐시를
+  /// 이어받지 않도록 로컬 프로필/피드백 기록을 모두 지운다.
+  Future<void> clearProfile() async {
+    await Future.wait([
+      _prefs.remove(_keyProfile),
+      _prefs.remove(_keyHeatFeedbacks),
+      _prefs.remove(_keyColdFeedbacks),
+    ]);
+  }
 }

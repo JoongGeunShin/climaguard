@@ -49,15 +49,17 @@ Future<WeatherData> weather(WeatherRef ref) async {
 
 RiskLevel _debugOfficialRisk(double temp, Season season) {
   if (season.isHeat) {
-    if (temp >= AppConstants.heatDanger)  return RiskLevel.danger;
-    if (temp >= AppConstants.heatAlert)   return RiskLevel.warning;
-    if (temp >= AppConstants.heatWarning) return RiskLevel.caution;
+    if (temp >= AppConstants.heatDanger)   return RiskLevel.danger;
+    if (temp >= AppConstants.heatAlert)    return RiskLevel.warning;
+    if (temp >= AppConstants.heatWarning)  return RiskLevel.caution;
+    if (temp >= AppConstants.heatCaution)  return RiskLevel.attention;
     return RiskLevel.safe;
   }
   if (season.isCold) {
-    if (temp <= AppConstants.coldDanger)  return RiskLevel.danger;
-    if (temp <= AppConstants.coldAlert)   return RiskLevel.warning;
-    if (temp <= AppConstants.coldWarning) return RiskLevel.caution;
+    if (temp <= AppConstants.coldDanger)   return RiskLevel.danger;
+    if (temp <= AppConstants.coldAlert)    return RiskLevel.warning;
+    if (temp <= AppConstants.coldWarning)  return RiskLevel.caution;
+    if (temp <= AppConstants.coldCaution)  return RiskLevel.attention;
     return RiskLevel.safe;
   }
   return RiskLevel.safe;

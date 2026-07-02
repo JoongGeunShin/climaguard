@@ -5,7 +5,7 @@ class GeminiDataSource {
   Future<String> getExplanation({required String prompt}) async {
     final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
     final model = GenerativeModel(
-      model: 'gemini-1.5-flash-latest',
+      model: 'gemini-flash-lite-latest',
       apiKey: apiKey,
       generationConfig: GenerationConfig(
         maxOutputTokens: 200,

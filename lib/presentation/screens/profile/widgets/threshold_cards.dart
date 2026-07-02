@@ -1,57 +1,61 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_constants.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/theme/app_colors.dart';
+import '../../../../data/datasources/threshold_service.dart';
+import '../../../../domain/entities/age_thresholds.dart';
 import '../../../../domain/entities/user_profile.dart';
 
-class ThresholdCards extends StatelessWidget {
+class ThresholdCards extends ConsumerWidget {
   const ThresholdCards({super.key, required this.profile});
 
   final UserProfile profile;
 
   String _ageKey(int age) {
-    if (age <= 9) return 'infant_0to9';
+    if (age <= 9)  return 'infant_0to9';
     if (age <= 17) return 'youth_10to17';
     if (age <= 64) return 'adult_18to64';
     if (age <= 74) return 'elderly_65to74';
     return 'super_elderly_75plus';
   }
 
-  double _heatThreshold() {
-    final key = _ageKey(profile.age);
-    double offset = AppConstants.ageGroupHeatOffsets[key]!;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ageKey = _ageKey(profile.age);
+
+    // Firestore 실시간 스트림 watch — 그룹학습으로 값이 바뀌면 즉시 재렌더링된다.
+    final base = ref.watch(baseThresholdsProvider).valueOrNull ??
+        BaseThresholds.defaults;
+    final ageOff = ref.watch(ageOffsetsProvider(ageKey)).valueOrNull ??
+        AgeOffsets.zero;
+
+    double condHeat = 0, condCold = 0;
     for (final c in profile.conditions) {
-      offset += AppConstants.conditionHeatOffsets[c] ?? 0.0;
+      final off = ref.watch(conditionOffsetProvider(c)).valueOrNull;
+      if (off != null) {
+        condHeat += off.heat;
+        condCold += off.cold;
+      }
     }
+
+    final totalFeedbacks = profile.heatFeedbackHistory.length +
+        profile.coldFeedbackHistory.length;
+
+    double feedbackOff = 0;
     if (profile.heatFeedbackHistory.isNotEmpty) {
       final avg = profile.heatFeedbackHistory.reduce((a, b) => a + b) /
           profile.heatFeedbackHistory.length;
-      offset += (avg * 0.2).clamp(-3.0, 3.0);
+      feedbackOff = (avg * 0.2).clamp(-3.0, 3.0);
     }
-    return AppConstants.heatAlert + offset;
-  }
 
-  double _coldThreshold() {
-    final key = _ageKey(profile.age);
-    double offset = AppConstants.ageGroupColdOffsets[key]!;
-    for (final c in profile.conditions) {
-      offset += AppConstants.conditionColdOffsets[c] ?? 0.0;
-    }
-    if (profile.coldFeedbackHistory.isNotEmpty) {
-      final avg = profile.coldFeedbackHistory.reduce((a, b) => a + b) /
-          profile.coldFeedbackHistory.length;
-      offset += (avg * 0.2).clamp(-3.0, 3.0);
-    }
-    return AppConstants.coldAlert + offset;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final heatT = _heatThreshold();
-    final coldT = _coldThreshold();
-    final totalFeedbacks = profile.heatFeedbackHistory.length +
-        profile.coldFeedbackHistory.length;
-    final heatDiff = heatT - AppConstants.heatAlert;
-    final coldDiff = coldT - AppConstants.coldAlert;
+    // 경고 단계 기준으로 개인 임계값 표시
+    final heatT = base.heatWarning + ageOff.heat.warning +
+        condHeat + feedbackOff;
+    final coldT = base.coldWarning + ageOff.cold.warning +
+        condCold + feedbackOff;
+    // 성인 기준선 대비 차이
+    final heatDiff = heatT - base.heatWarning;
+    final coldDiff = coldT - base.coldWarning;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,8 +63,8 @@ class ThresholdCards extends StatelessWidget {
         Row(
           children: [
             const Text('내 맞춤 기준',
-                style:
-                    TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                style: TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.bold)),
             const Spacer(),
             if (totalFeedbacks > 0)
               Text('피드백 $totalFeedbacks개 기반',
@@ -126,11 +130,6 @@ class _ThresholdTile extends StatelessWidget {
     }
   }
 
-  Color get _diffColor {
-    if (diff.abs() < 0.05) return Colors.grey;
-    return iconColor;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -157,13 +156,12 @@ class _ThresholdTile extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             '${value.toStringAsFixed(1)}°',
-            style: const TextStyle(
-                fontSize: 28, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
           Text(
             _diffLabel,
-            style: TextStyle(fontSize: 12, color: _diffColor),
+            style: TextStyle(fontSize: 12, color: iconColor),
           ),
         ],
       ),

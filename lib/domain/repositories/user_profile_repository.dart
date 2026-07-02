@@ -5,4 +5,5 @@ abstract interface class UserProfileRepository {
   Future<UserProfile?> loadProfile();
   Future<void> saveProfile(UserProfile profile);
   Future<void> addFeedback({required Season season, required double feelsDelta});
+  Future<void> clearLocalCache();
 }

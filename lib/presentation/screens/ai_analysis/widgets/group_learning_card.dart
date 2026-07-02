@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../domain/entities/climate_alert.dart';
 import '../../../../domain/entities/group_stat.dart';
 import '../../../../presentation/providers/group_stats_provider.dart';
@@ -50,9 +49,15 @@ class GroupLearningCard extends ConsumerWidget {
 
         // 피드백 없으면 연령 그룹 기반 기본 보정값으로 시연용 카드 표시
         if (count == 0) {
-          final baseOffset = isHeat
-              ? (AppConstants.ageGroupHeatOffsets[key] ?? 0.0)
-              : (AppConstants.ageGroupColdOffsets[key] ?? 0.0);
+          const heatOff = {
+            'infant_0to9': -3.0, 'youth_10to17': -1.5, 'adult_18to64': 0.0,
+            'elderly_65to74': -3.0, 'super_elderly_75plus': -4.5,
+          };
+          const coldOff = {
+            'infant_0to9': 3.0, 'youth_10to17': 1.5, 'adult_18to64': 0.0,
+            'elderly_65to74': 3.0, 'super_elderly_75plus': 4.5,
+          };
+          final baseOffset = isHeat ? (heatOff[key] ?? 0.0) : (coldOff[key] ?? 0.0);
           return _DefaultOffsetCard(
             isHeat: isHeat,
             groupLabel: _ageGroupLabel(key),

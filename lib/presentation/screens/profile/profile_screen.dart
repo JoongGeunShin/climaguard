@@ -90,6 +90,26 @@ class ProfileScreen extends ConsumerWidget {
                               Icons.chevron_right,
                               color: Colors.grey),
                         ),
+                        const SizedBox(height: 12),
+                        ListTile(
+                          onTap: () => _confirmLogout(context, ref),
+                          contentPadding: EdgeInsets.zero,
+                          leading: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFEBEE),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.logout,
+                                color: Color(0xFFE53935), size: 20),
+                          ),
+                          title: const Text('로그아웃',
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFE53935))),
+                        ),
                         const SizedBox(height: 32),
                       ],
                     ),
@@ -101,5 +121,29 @@ class ProfileScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('로그아웃'),
+        content: const Text('로그아웃 하시겠어요?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('로그아웃',
+                style: TextStyle(color: Color(0xFFE53935))),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await ref.read(userProfileNotifierProvider.notifier).logout();
+    }
   }
 }

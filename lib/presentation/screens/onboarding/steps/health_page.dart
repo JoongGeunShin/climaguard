@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../data/datasources/threshold_service.dart';
+import '../../../../domain/entities/age_thresholds.dart';
 
 class HealthPage extends StatelessWidget {
   final double hPad;
@@ -10,7 +13,7 @@ class HealthPage extends StatelessWidget {
   final bool noCondition;
   final List<String> conditionOptions;
   final String riskGroupLabel;
-  final double heatOffset;
+  final List<String> conditions;
   final bool isSaving;
   final bool isValid;
   final VoidCallback onDecrement;
@@ -28,7 +31,7 @@ class HealthPage extends StatelessWidget {
     required this.noCondition,
     required this.conditionOptions,
     required this.riskGroupLabel,
-    required this.heatOffset,
+    required this.conditions,
     required this.isSaving,
     required this.isValid,
     required this.onDecrement,
@@ -113,7 +116,7 @@ class HealthPage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 36),
-                _RiskSummaryCard(groupLabel: riskGroupLabel, heatOffset: heatOffset),
+                _RiskSummaryCard(groupLabel: riskGroupLabel, age: age, conditions: conditions),
               ],
             ),
           ),
@@ -295,13 +298,40 @@ class _ConditionChip extends StatelessWidget {
   }
 }
 
-class _RiskSummaryCard extends StatelessWidget {
+class _RiskSummaryCard extends ConsumerWidget {
   final String groupLabel;
-  final double heatOffset;
-  const _RiskSummaryCard({required this.groupLabel, required this.heatOffset});
+  final int age;
+  final List<String> conditions;
+  const _RiskSummaryCard({
+    required this.groupLabel,
+    required this.age,
+    required this.conditions,
+  });
+
+  String _ageKey(int age) {
+    if (age <= 9) return 'infant_0to9';
+    if (age <= 17) return 'youth_10to17';
+    if (age <= 64) return 'adult_18to64';
+    if (age <= 74) return 'elderly_65to74';
+    return 'super_elderly_75plus';
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ageKey = _ageKey(age);
+
+    // Firestore 실시간 스트림 watch — 프로필 화면(ThresholdCards)과 동일하게
+    // warning 단계 기준으로 계산하며, 그룹학습 갱신도 즉시 반영된다.
+    final ageOff = ref.watch(ageOffsetsProvider(ageKey)).valueOrNull ??
+        AgeOffsets.zero;
+
+    double condHeat = 0;
+    for (final c in conditions) {
+      final off = ref.watch(conditionOffsetProvider(c)).valueOrNull;
+      if (off != null) condHeat += off.heat;
+    }
+
+    final heatOffset = ageOff.heat.warning + condHeat;
     final sign = heatOffset >= 0 ? '+' : '';
     final offsetStr = '$sign${heatOffset.toStringAsFixed(1)}°';
 

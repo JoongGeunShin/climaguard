@@ -22,35 +22,19 @@ class AppConstants {
   static const int apiPageSize = 100;
   static const Duration apiTimeout = Duration(seconds: 10);
 
-  // ── 폭염 공식 임계치 (°C, 체감온도 기준) ──────────────────────────
-  static const double heatCaution = 31.0;  // 관심
-  static const double heatWarning = 33.0;  // 주의
-  static const double heatAlert   = 35.0;  // 경고
-  static const double heatDanger  = 38.0;  // 위험
+  // ── 폭염 성인 기준 임계치 (°C, 체감온도) — hourly 차트·디버그 전용 ─
+  static const double heatCaution = 28.0;  // 관심
+  static const double heatWarning = 31.0;  // 주의
+  static const double heatAlert   = 33.0;  // 경고
+  static const double heatDanger  = 36.0;  // 위험
 
-  // ── 한파 공식 임계치 (°C, 체감한파온도 기준) ──────────────────────
-  static const double coldCaution = -6.0;   // 관심
-  static const double coldWarning = -12.0;  // 주의
-  static const double coldAlert   = -15.0;  // 경고
-  static const double coldDanger  = -18.0;  // 위험
+  // ── 한파 성인 기준 임계치 (°C, 체감한파온도) — hourly 차트·디버그 전용 ─
+  static const double coldCaution = -4.0;   // 관심
+  static const double coldWarning = -8.0;   // 주의
+  static const double coldAlert   = -12.0;  // 경고
+  static const double coldDanger  = -16.0;  // 위험
 
-  // ── 연령별 폭염 보정값 (음수 = 더 민감) ──────────────────────────
-  static const Map<String, double> ageGroupHeatOffsets = {
-    'infant_0to9':        -3.0,
-    'youth_10to17':       -1.5,
-    'adult_18to64':        0.0,
-    'elderly_65to74':     -3.0,
-    'super_elderly_75plus': -4.5,
-  };
-
-  // ── 연령별 한파 보정값 (양수 = 더 민감 → 덜 추운 온도에서 경보) ──
-  static const Map<String, double> ageGroupColdOffsets = {
-    'infant_0to9':          3.0,
-    'youth_10to17':         1.5,
-    'adult_18to64':         0.0,
-    'elderly_65to74':       3.0,
-    'super_elderly_75plus': 4.5,
-  };
+  // 연령별 오프셋은 ThresholdService로 이전 (Firestore 관리)
 
   // ── 기저질환별 폭염 추가 보정 (음수) ─────────────────────────────
   static const Map<String, double> conditionHeatOffsets = {
