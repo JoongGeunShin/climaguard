@@ -71,11 +71,27 @@ dev_dependencies:
   custom_lint: ^0.7.5
   riverpod_lint: ^2.6.3
 
+  # 앱 아이콘 생성
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  image_path: "assets/icon/app_icon.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  windows:
+    generate: true
+  macos:
+    generate: true
+  web:
+    generate: true
+
 flutter:
   uses-material-design: true
   assets:
     - .env
     - assets/geo/gyeonggi_emd.geojson
+    - assets/icon/app_icon.png
   fonts:
     - family: Pretendard
       fonts:
