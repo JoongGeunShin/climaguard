@@ -13,6 +13,7 @@ import '../../presentation/screens/home/home_screen.dart';
 import '../../presentation/screens/onboarding/onboarding_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
 import '../../presentation/screens/notifications/notifications_screen.dart';
+import '../../presentation/screens/response_protocol/response_protocol_screen.dart';
 import '../../presentation/screens/shelter/shelter_screen.dart';
 import '../../presentation/screens/splash_screen.dart';
 
@@ -86,6 +87,20 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: '/dashboard',
         builder: (_, _) => const DashboardScreen(),
+      ),
+      GoRoute(
+        path: '/response-protocol',
+        builder: (_, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return ResponseProtocolScreen(
+            regionLabel: extra['regionLabel'] as String,
+            isHeat: extra['isHeat'] as bool,
+            danger: extra['danger'] as int,
+            warning: extra['warning'] as int,
+            caution: extra['caution'] as int,
+            safe: extra['safe'] as int,
+          );
+        },
       ),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
