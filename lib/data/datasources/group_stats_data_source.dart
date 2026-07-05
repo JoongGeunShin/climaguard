@@ -40,6 +40,7 @@ class GroupStatsDataSource {
     required Season season,
     required double delta,
     List<String> conditions = const [],
+    String? regionCode,
   }) async {
     try {
       final update = <String, dynamic>{
@@ -61,6 +62,17 @@ class GroupStatsDataSource {
       await _colFor(season).doc(ageKey).set(update, SetOptions(merge: true));
     } catch (_) {
       // 집단 통계 실패는 개인 피드백에 영향 없음
+    }
+
+    // 지역별 참여 현황 — 연령 기반 AI 분석 파이프라인과 완전히 별개의 단순
+    // 카운터. 대시보드에 "이 지역에서 몇 건 참여했는지"만 보여주는 용도.
+    if (regionCode != null) {
+      try {
+        await _db.collection('regionFeedbackStats').doc(regionCode).set({
+          season.isHeat ? 'heatCount' : 'coldCount': FieldValue.increment(1),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      } catch (_) {}
     }
   }
 
@@ -188,5 +200,22 @@ class GroupStatsDataSource {
     final hot = await loadOneSeason(ageKey, Season.heat);
     final cold = await loadOneSeason(ageKey, Season.cold);
     return GroupStat.merge(ageKey, hot, cold);
+  }
+
+  /// 지역별 집단학습 참여 현황(피드백 제출 건수)만 반환 — AI 분석과 무관한 단순 카운터.
+  Future<({int heatCount, int coldCount})> loadRegionFeedback(
+      String regionCode) async {
+    try {
+      final snap =
+          await _db.collection('regionFeedbackStats').doc(regionCode).get();
+      if (!snap.exists) return (heatCount: 0, coldCount: 0);
+      final data = snap.data() as Map<String, dynamic>;
+      return (
+        heatCount: (data['heatCount'] as num?)?.toInt() ?? 0,
+        coldCount: (data['coldCount'] as num?)?.toInt() ?? 0,
+      );
+    } catch (_) {
+      return (heatCount: 0, coldCount: 0);
+    }
   }
 }

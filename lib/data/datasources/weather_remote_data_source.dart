@@ -28,9 +28,14 @@ class WeatherRemoteDataSource {
   final Dio _dio;
   final WeatherCacheService _cache;
 
-  // L1: 인메모리 캐시 (세션 내 재호출 방지)
-  WeatherData? _memCache;
-  String? _memBaseKey;
+  // L1: 인메모리 캐시 (세션 내 재호출 방지) — 반드시 (nx, ny)까지 키에 포함해야
+  // 한다. 예전엔 baseKey(발표시각)만으로 판단해서, 원래 "사용자 한 명이 자기
+  // 위치만 반복 조회"하는 상황에선 문제가 없었지만, 지자체 대시보드가 여러
+  // 지역(nx, ny가 서로 다름)을 같은 세션에서 조회하면서 다른 지역 날씨를
+  // 그대로 재사용해버리는 심각한 버그가 있었다.
+  final _memCache = <String, WeatherData>{};
+
+  String _memKey(int nx, int ny, String baseKey) => '${nx}_${ny}_$baseKey';
 
   Future<WeatherData> fetchCurrentWeather({
     required int nx,
@@ -39,15 +44,16 @@ class WeatherRemoteDataSource {
     final now = DateTime.now();
     final (:date, :time) = _resolveBaseDateTime(now);
     final baseKey = '${date}_$time';
+    final memKey = _memKey(nx, ny, baseKey);
 
     // L1: 인메모리
-    if (_memCache != null && _memBaseKey == baseKey) return _memCache!;
+    final memHit = _memCache[memKey];
+    if (memHit != null) return memHit;
 
     // L2: Firestore (사용자 간 공유 캐시)
     final cached = await _cache.read(nx, ny, baseKey);
     if (cached != null) {
-      _memCache = cached;
-      _memBaseKey = baseKey;
+      _memCache[memKey] = cached;
       return cached;
     }
 
@@ -71,8 +77,7 @@ class WeatherRemoteDataSource {
       final parsed = WeatherForecastResponse.fromJson(response.data!);
       final result = _toWeatherData(parsed.response.body.items.items, now);
 
-      _memCache = result;
-      _memBaseKey = baseKey;
+      _memCache[memKey] = result;
       _cache.write(nx, ny, baseKey, result); // 백그라운드 저장
       return result;
     } on DioException catch (e) {

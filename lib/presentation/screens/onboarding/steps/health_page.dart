@@ -14,13 +14,12 @@ class HealthPage extends StatelessWidget {
   final List<String> conditionOptions;
   final String riskGroupLabel;
   final List<String> conditions;
-  final bool isSaving;
   final bool isValid;
   final VoidCallback onDecrement;
   final VoidCallback onIncrement;
   final void Function(String) onSelectGender;
   final void Function(String) onToggleCondition;
-  final VoidCallback onComplete;
+  final VoidCallback? onNext;
 
   const HealthPage({
     super.key,
@@ -32,13 +31,12 @@ class HealthPage extends StatelessWidget {
     required this.conditionOptions,
     required this.riskGroupLabel,
     required this.conditions,
-    required this.isSaving,
     required this.isValid,
     required this.onDecrement,
     required this.onIncrement,
     required this.onSelectGender,
     required this.onToggleCondition,
-    required this.onComplete,
+    required this.onNext,
   });
 
   @override
@@ -125,7 +123,7 @@ class HealthPage extends StatelessWidget {
           padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 24),
           child: Column(
             children: [
-              if (!isValid && !isSaving)
+              if (!isValid)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Row(
@@ -152,22 +150,16 @@ class HealthPage extends StatelessWidget {
                     disabledBackgroundColor: const Color(0xFFE8E4DF),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  onPressed: isSaving || !isValid ? null : onComplete,
-                  child: isSaving
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                        )
-                      : Text(
-                          '내 맞춤 기준 만들기',
-                          style: TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: isValid ? Colors.white : AppColors.textSecondary,
-                          ),
-                        ),
+                  onPressed: onNext,
+                  child: Text(
+                    '다음',
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: isValid ? Colors.white : AppColors.textSecondary,
+                    ),
+                  ),
                 ),
               ),
             ],

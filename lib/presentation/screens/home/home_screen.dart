@@ -148,6 +148,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _refresh() async {
     ref.invalidate(locationProvider);
+    ref.invalidate(weatherProvider);
+    ref.invalidate(climateAlertProvider);
     await ref.read(weatherProvider.future).catchError((e) => throw e);
   }
 

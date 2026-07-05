@@ -8,6 +8,7 @@ import '../../widgets/climaguard_logo.dart';
 import 'steps/terms_page.dart';
 import 'steps/name_page.dart';
 import 'steps/health_page.dart';
+import 'steps/region_page.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -48,6 +49,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     '당뇨': '당뇨',
     '호흡기': '호흡기',
   };
+
+  // Step 3 – 지역
+  String? _selectedCity;
+  String? _selectedDongCode;
+  String? _selectedDongName;
 
   @override
   void dispose() {
@@ -102,6 +108,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   List<String> get _storageConditions =>
       _selectedConditions.map((d) => _conditionKeyMap[d] ?? d).toList();
 
+  void _selectCity(String city) {
+    setState(() {
+      _selectedCity = city;
+      _selectedDongCode = null;
+      _selectedDongName = null;
+    });
+  }
+
+  void _selectDong(String code, String name) {
+    setState(() {
+      _selectedDongCode = code;
+      _selectedDongName = name;
+    });
+  }
+
   String _riskGroupLabel(int age) {
     if (age <= 9) return '영유아 위험군 · 0~9세';
     if (age <= 17) return '청소년 · 10~17세';
@@ -121,6 +142,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             age: _age,
             gender: _gender,
             conditions: _noCondition ? [] : _storageConditions,
+            regionCode: _selectedDongCode,
           ),
         );
   }
@@ -141,7 +163,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: [
                   const ClimaGuardLogo(),
                   const Spacer(),
-                  _PageDots(current: _currentPage, total: 3),
+                  _PageDots(current: _currentPage, total: 4),
                 ],
               ),
             ),
@@ -177,12 +199,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     conditionOptions: _conditionOptions,
                     riskGroupLabel: _riskGroupLabel(_age),
                     conditions: _noCondition ? const [] : _storageConditions,
-                    isSaving: _isSaving,
                     isValid: _healthValid,
                     onDecrement: () => setState(() { if (_age > 1) _age--; }),
                     onIncrement: () => setState(() { if (_age < 120) _age++; }),
                     onSelectGender: (g) => setState(() => _gender = g),
                     onToggleCondition: _toggleCondition,
+                    onNext: _healthValid ? _nextPage : null,
+                  ),
+                  RegionPage(
+                    hPad: hPad,
+                    selectedCity: _selectedCity,
+                    selectedDongCode: _selectedDongCode,
+                    selectedDongName: _selectedDongName,
+                    isSaving: _isSaving,
+                    onSelectCity: _selectCity,
+                    onSelectDong: _selectDong,
                     onComplete: _complete,
                   ),
                 ],

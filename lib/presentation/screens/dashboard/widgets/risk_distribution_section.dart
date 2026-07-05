@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../domain/entities/risk_level.dart';
-import '../models/demo_stats.dart';
+import '../models/risk_distribution.dart';
 
 class RiskDistributionSection extends StatelessWidget {
   const RiskDistributionSection({
@@ -68,16 +68,19 @@ class RiskDistributionSection extends StatelessWidget {
               .toList(),
         ),
         const SizedBox(height: 12),
-        // 가로 비율 바
+        // 가로 비율 바 — 전체 인원이 0이면(데이터 없음) 균등 분할로 대체해
+        // flex가 전부 0이 되는 상황(레이아웃 오류)을 피한다.
         ClipRRect(
           borderRadius: BorderRadius.circular(6),
           child: Row(
             children: levels.map((level) {
               return Expanded(
-                flex: distribution.countOf(level),
+                flex: distribution.total == 0 ? 1 : distribution.countOf(level),
                 child: Container(
                   height: 8,
-                  color: riskColor(level),
+                  color: distribution.total == 0
+                      ? const Color(0xFFEEEEEE)
+                      : riskColor(level),
                 ),
               );
             }).toList(),
@@ -102,7 +105,7 @@ class _RiskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = riskColor(level);
-    final pct = (count / total * 100).round();
+    final pct = total == 0 ? 0 : (count / total * 100).round();
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),

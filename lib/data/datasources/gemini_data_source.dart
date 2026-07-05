@@ -2,13 +2,16 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 class GeminiDataSource {
-  Future<String> getExplanation({required String prompt}) async {
+  Future<String> getExplanation({
+    required String prompt,
+    int maxOutputTokens = 200,
+  }) async {
     final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
     final model = GenerativeModel(
       model: 'gemini-flash-lite-latest',
       apiKey: apiKey,
       generationConfig: GenerationConfig(
-        maxOutputTokens: 200,
+        maxOutputTokens: maxOutputTokens,
         temperature: 0.7,
       ),
     );

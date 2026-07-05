@@ -45,6 +45,7 @@ class UserProfileNotifier extends _$UserProfileNotifier {
         season: season,
         delta: feelsDelta,
         conditions: current.conditions,
+        regionCode: current.regionCode,
       );
 
       // 집단학습 임계값 도달 시 이 기기가 직접 Gemini 분석을 트리거
