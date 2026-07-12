@@ -8,7 +8,7 @@ import '../../core/utils/feels_like_calculator.dart';
 import '../../domain/entities/risk_level.dart';
 import '../../domain/entities/season.dart';
 import '../../domain/entities/weather_data.dart';
-import '../models/weather_forecast_response.dart';
+import '../models/weather_nowcast_response.dart';
 import 'dio_provider.dart';
 import 'weather_cache_service.dart';
 
@@ -42,7 +42,7 @@ class WeatherRemoteDataSource {
     required int ny,
   }) async {
     final now = DateTime.now();
-    final (:date, :time) = _resolveBaseDateTime(now);
+    final (:date, :time) = _resolveUltraSrtBaseDateTime(now);
     final baseKey = '${date}_$time';
     final memKey = _memKey(nx, ny, baseKey);
 
@@ -57,13 +57,15 @@ class WeatherRemoteDataSource {
       return cached;
     }
 
-    // L3: KMA API 호출
+    // L3: KMA 초단기실황(getUltraSrtNcst) 호출 — 예보가 아닌 실제 관측값을
+    // 반환하므로, 단기예보(getVilageFcst)를 쓸 때처럼 "여러 미래 시각 중
+    // 어느 슬롯이 지금인지"를 고민할 필요가 없다.
     try {
       final response = await _dio.get<Map<String, dynamic>>(
-        '${AppConstants.weatherBaseUrl}${AppConstants.shortForecastPath}',
+        '${AppConstants.weatherBaseUrl}${AppConstants.ultraSrtNcstPath}',
         queryParameters: {
           'serviceKey': Uri.decodeComponent(dotenv.env['KMA_API_KEY'] ?? ''),
-          'numOfRows': 100,
+          'numOfRows': 10,
           'pageNo': 1,
           'dataType': 'JSON',
           'base_date': date,
@@ -74,7 +76,7 @@ class WeatherRemoteDataSource {
       );
 
       _checkKmaHeader(response.data!);
-      final parsed = WeatherForecastResponse.fromJson(response.data!);
+      final parsed = WeatherNowcastResponse.fromJson(response.data!);
       final result = _toWeatherData(parsed.response.body.items.items, now);
 
       _memCache[memKey] = result;
@@ -100,7 +102,7 @@ class WeatherRemoteDataSource {
   }
 
   WeatherData _toWeatherData(
-    List<WeatherForecastItem> items,
+    List<WeatherNowcastItem> items,
     DateTime at,
   ) {
     double temperature = 0;
@@ -109,12 +111,12 @@ class WeatherRemoteDataSource {
 
     for (final item in items) {
       switch (item.category) {
-        case 'TMP':
-          temperature = double.tryParse(item.fcstValue) ?? 0;
+        case 'T1H':
+          temperature = double.tryParse(item.obsrValue) ?? 0;
         case 'REH':
-          humidity = int.tryParse(item.fcstValue) ?? 0;
+          humidity = int.tryParse(item.obsrValue) ?? 0;
         case 'WSD':
-          windSpeed = double.tryParse(item.fcstValue) ?? 0;
+          windSpeed = double.tryParse(item.obsrValue) ?? 0;
       }
     }
 
@@ -176,30 +178,15 @@ class WeatherRemoteDataSource {
     return RiskLevel.safe;
   }
 
-  // 단기예보 발표 시각: 매 3시간 (0200, 0500, 0800, 1100, 1400, 1700, 2000, 2300)
-  // 발표 후 약 10분 뒤 제공되므로 현재 시각에서 10분을 빼고 판단
-  ({String date, String time}) _resolveBaseDateTime(DateTime now) {
-    const baseTimes = [2, 5, 8, 11, 14, 17, 20, 23];
-    final dt = now.subtract(const Duration(minutes: 10));
-    final hour = dt.hour;
-
-    int baseHour;
-    bool useYesterday;
-
-    if (hour < 2) {
-      baseHour = 23;
-      useYesterday = true;
-    } else {
-      baseHour = baseTimes.lastWhere((h) => h <= hour);
-      useYesterday = false;
-    }
-
-    final baseDate =
-        useYesterday ? dt.subtract(const Duration(days: 1)) : dt;
+  // 초단기실황 발표 시각: 매시 정각(base_time) 기준, 매시 40분에 생성되어
+  // 45분부터 제공된다. 아직 이번 시간 데이터가 생성되지 않았을 45분 이전에는
+  // 이전 시간 데이터를 사용해야 한다.
+  ({String date, String time}) _resolveUltraSrtBaseDateTime(DateTime now) {
+    final dt = now.minute < 45 ? now.subtract(const Duration(hours: 1)) : now;
 
     return (
-      date: _formatDate(baseDate),
-      time: '${baseHour.toString().padLeft(2, '0')}00',
+      date: _formatDate(dt),
+      time: '${dt.hour.toString().padLeft(2, '0')}00',
     );
   }
 

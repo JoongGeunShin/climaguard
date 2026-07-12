@@ -3,8 +3,8 @@ class AppConstants {
 
   // 기상청 API 엔드포인트
   static const String weatherBaseUrl = 'http://apis.data.go.kr/1360000';
-  static const String shortForecastPath =
-      '/VilageFcstInfoService_2.0/getVilageFcst';
+  static const String ultraSrtNcstPath =
+      '/VilageFcstInfoService_2.0/getUltraSrtNcst';
   static const String impactForecastPath =
       '/ImpFcstInfoService_2.0/getImpFcst';
   static const String heatIndexPath =
