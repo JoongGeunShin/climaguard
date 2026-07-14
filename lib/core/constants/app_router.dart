@@ -99,6 +99,8 @@ GoRouter appRouter(AppRouterRef ref) {
             warning: extra['warning'] as int,
             caution: extra['caution'] as int,
             safe: extra['safe'] as int,
+            feelsLike: extra['feelsLike'] as double?,
+            temperature: extra['temperature'] as double?,
           );
         },
       ),
