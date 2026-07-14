@@ -14,6 +14,8 @@ class ResponseProtocolScreen extends ConsumerWidget {
     required this.warning,
     required this.caution,
     required this.safe,
+    this.feelsLike,
+    this.temperature,
   });
 
   final String regionLabel;
@@ -22,6 +24,8 @@ class ResponseProtocolScreen extends ConsumerWidget {
   final int warning;
   final int caution;
   final int safe;
+  final double? feelsLike;
+  final double? temperature;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,6 +36,8 @@ class ResponseProtocolScreen extends ConsumerWidget {
       warning: warning,
       caution: caution,
       safe: safe,
+      feelsLike: feelsLike,
+      temperature: temperature,
     ));
     final seasonColor = isHeat ? AppColors.heatCard : AppColors.coldCard;
     final size = MediaQuery.sizeOf(context);
@@ -116,6 +122,8 @@ class ResponseProtocolScreen extends ConsumerWidget {
                               warning: warning,
                               caution: caution,
                               safe: safe,
+                              feelsLike: feelsLike,
+                              temperature: temperature,
                             ),
                           ),
                           child: const Text('다시 시도'),

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/datasources/gemini_data_source.dart';
+import '../../data/datasources/official_guideline_data_source.dart';
 import '../../domain/usecases/get_response_protocol_use_case.dart';
 import '../../domain/usecases/regional_risk_projection_use_case.dart';
 
@@ -16,6 +17,8 @@ Future<String> responseProtocol(
   required int warning,
   required int caution,
   required int safe,
+  double? feelsLike,
+  double? temperature,
 }) {
   final projection = RegionRiskProjection(
     totalPopulation: danger + warning + caution + safe,
@@ -23,8 +26,13 @@ Future<String> responseProtocol(
     warning: warning,
     caution: caution,
     safe: safe,
+    feelsLike: feelsLike,
+    temperature: temperature,
   );
-  return GetResponseProtocolUseCase(GeminiDataSource()).execute(
+  return GetResponseProtocolUseCase(
+    GeminiDataSource(),
+    ref.watch(officialGuidelineDataSourceProvider),
+  ).execute(
     regionLabel: regionLabel,
     isHeat: isHeat,
     projection: projection,

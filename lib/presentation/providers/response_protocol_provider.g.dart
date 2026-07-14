@@ -6,7 +6,7 @@ part of 'response_protocol_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$responseProtocolHash() => r'c23fa7e6aab38bff5539b61c8513233a9a87e8b2';
+String _$responseProtocolHash() => r'421fdaf32d4e12f7d33cfe3c592489c3e7364b22';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -46,6 +46,8 @@ class ResponseProtocolFamily extends Family<AsyncValue<String>> {
     required int warning,
     required int caution,
     required int safe,
+    double? feelsLike,
+    double? temperature,
   }) {
     return ResponseProtocolProvider(
       regionLabel: regionLabel,
@@ -54,6 +56,8 @@ class ResponseProtocolFamily extends Family<AsyncValue<String>> {
       warning: warning,
       caution: caution,
       safe: safe,
+      feelsLike: feelsLike,
+      temperature: temperature,
     );
   }
 
@@ -68,6 +72,8 @@ class ResponseProtocolFamily extends Family<AsyncValue<String>> {
       warning: provider.warning,
       caution: provider.caution,
       safe: provider.safe,
+      feelsLike: provider.feelsLike,
+      temperature: provider.temperature,
     );
   }
 
@@ -96,6 +102,8 @@ class ResponseProtocolProvider extends AutoDisposeFutureProvider<String> {
     required int warning,
     required int caution,
     required int safe,
+    double? feelsLike,
+    double? temperature,
   }) : this._internal(
          (ref) => responseProtocol(
            ref as ResponseProtocolRef,
@@ -105,6 +113,8 @@ class ResponseProtocolProvider extends AutoDisposeFutureProvider<String> {
            warning: warning,
            caution: caution,
            safe: safe,
+           feelsLike: feelsLike,
+           temperature: temperature,
          ),
          from: responseProtocolProvider,
          name: r'responseProtocolProvider',
@@ -120,6 +130,8 @@ class ResponseProtocolProvider extends AutoDisposeFutureProvider<String> {
          warning: warning,
          caution: caution,
          safe: safe,
+         feelsLike: feelsLike,
+         temperature: temperature,
        );
 
   ResponseProtocolProvider._internal(
@@ -135,6 +147,8 @@ class ResponseProtocolProvider extends AutoDisposeFutureProvider<String> {
     required this.warning,
     required this.caution,
     required this.safe,
+    required this.feelsLike,
+    required this.temperature,
   }) : super.internal();
 
   final String regionLabel;
@@ -143,6 +157,8 @@ class ResponseProtocolProvider extends AutoDisposeFutureProvider<String> {
   final int warning;
   final int caution;
   final int safe;
+  final double? feelsLike;
+  final double? temperature;
 
   @override
   Override overrideWith(
@@ -163,6 +179,8 @@ class ResponseProtocolProvider extends AutoDisposeFutureProvider<String> {
         warning: warning,
         caution: caution,
         safe: safe,
+        feelsLike: feelsLike,
+        temperature: temperature,
       ),
     );
   }
@@ -180,7 +198,9 @@ class ResponseProtocolProvider extends AutoDisposeFutureProvider<String> {
         other.danger == danger &&
         other.warning == warning &&
         other.caution == caution &&
-        other.safe == safe;
+        other.safe == safe &&
+        other.feelsLike == feelsLike &&
+        other.temperature == temperature;
   }
 
   @override
@@ -192,6 +212,8 @@ class ResponseProtocolProvider extends AutoDisposeFutureProvider<String> {
     hash = _SystemHash.combine(hash, warning.hashCode);
     hash = _SystemHash.combine(hash, caution.hashCode);
     hash = _SystemHash.combine(hash, safe.hashCode);
+    hash = _SystemHash.combine(hash, feelsLike.hashCode);
+    hash = _SystemHash.combine(hash, temperature.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -217,6 +239,12 @@ mixin ResponseProtocolRef on AutoDisposeFutureProviderRef<String> {
 
   /// The parameter `safe` of this provider.
   int get safe;
+
+  /// The parameter `feelsLike` of this provider.
+  double? get feelsLike;
+
+  /// The parameter `temperature` of this provider.
+  double? get temperature;
 }
 
 class _ResponseProtocolProviderElement
@@ -236,6 +264,10 @@ class _ResponseProtocolProviderElement
   int get caution => (origin as ResponseProtocolProvider).caution;
   @override
   int get safe => (origin as ResponseProtocolProvider).safe;
+  @override
+  double? get feelsLike => (origin as ResponseProtocolProvider).feelsLike;
+  @override
+  double? get temperature => (origin as ResponseProtocolProvider).temperature;
 }
 
 // ignore_for_file: type=lint
