@@ -32,12 +32,19 @@ class DemoRiskGenerator {
     final caution = remaining <= 0 ? 0 : (remaining * (0.4 + rnd.nextDouble() * 0.3)).round();
     final safe = remaining - caution;
 
+    // 위험군 비율이 높을수록 더 극단적인 기온으로 보이게 한다.
+    final severity = danger / (total == 0 ? 1 : total);
+    final feelsLike = isHeat ? 30.0 + severity * 10 : null;
+    final temperature = isHeat ? null : -8.0 - severity * 12;
+
     return RegionRiskProjection(
       totalPopulation: total,
       danger: danger,
       warning: warning,
       caution: caution < 0 ? 0 : caution,
       safe: safe < 0 ? 0 : safe,
+      feelsLike: feelsLike,
+      temperature: temperature,
     );
   }
 
