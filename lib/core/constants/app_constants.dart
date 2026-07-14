@@ -34,6 +34,14 @@ class AppConstants {
   static const double coldAlert   = -12.0;  // 경고
   static const double coldDanger  = -16.0;  // 위험
 
+  // ── 기상청 공식 특보 발표기준 (고정값, 집단학습으로 변하는 위 개인 임계치와
+  // 무관) — 폭염은 일 최고체감온도, 한파는 아침 최저기온(체감 아님) 기준.
+  // 출처: 기상청 특보 발표기준(weather.go.kr/w/forecast/guide/standard.do)
+  static const double kmaHeatAdvisory = 33.0;  // 폭염주의보
+  static const double kmaHeatWarning  = 35.0;  // 폭염경보
+  static const double kmaColdAdvisory = -12.0; // 한파주의보
+  static const double kmaColdWarning  = -15.0; // 한파경보
+
   // 연령별 오프셋은 ThresholdService로 이전 (Firestore 관리)
 
   // ── 기저질환별 폭염 추가 보정 (음수) ─────────────────────────────
